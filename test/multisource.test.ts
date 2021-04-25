@@ -27,6 +27,9 @@ describe('multisource', function() {
     })
 
     expect(j0('a:1,b:@"./t01.jsonic"')).equals({ a: 1, b: { c: 2 } })
+
+    expect(j0('a:1,b:@"./t02.jsonic",c:3'))
+      .equals({ a: 1, b: { d: 2, e: { f: 4 } }, c: 3 })
   })
 })
 

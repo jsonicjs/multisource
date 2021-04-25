@@ -1,9 +1,8 @@
 /* Copyright (c) 2021 Richard Rodger, MIT License */
 /* $lab:coverage:off$ */
 'use strict'
-//import Fs from 'fs'
-//import Path from 'path'
-import { Jsonic, Plugin, Rule, RuleSpec, Context, util } from '../jsonic'
+
+import { Jsonic, Plugin, Rule, RuleSpec, Context, util } from 'jsonic'
 //import { Json } from './json'
 //import { Csv } from './csv'
 /* $lab:coverage:on$ */
@@ -19,9 +18,13 @@ let DEFAULTS = {
 }
 
 
-type Resolver = {
-  resolve: (path: string, opts: any) => any
-}
+type Resolver = (
+  path: string,
+  jsonic: Jsonic,
+  ctx: Context,
+  opts: any
+) => any
+
 
 
 let MultiSource: Plugin = function multisource(jsonic: Jsonic) {
@@ -70,7 +73,7 @@ let MultiSource: Plugin = function multisource(jsonic: Jsonic) {
         // let file_ext = filedesc.ext.toLowerCase()
 
         let path = rule.open[1].val
-        let val = resolver.resolve(path, popts)
+        let val = resolver(path, jsonic, ctx, popts)
 
         // if ('.js' === file_ext) {
         //   val = require(fullpath)
@@ -124,4 +127,4 @@ let MultiSource: Plugin = function multisource(jsonic: Jsonic) {
   })
 }
 
-export { MultiSource }
+export { MultiSource, Resolver }
