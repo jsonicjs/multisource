@@ -1,13 +1,10 @@
 {
   "name": "@jsonic/multisource",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "",
   "main": "dist/multisource.js",
   "type": "commonjs",
   "types": "dist/multisource.d.ts",
-  "exports": {
-    "resolver/file": "dist/resolver/file.js"
-  },
   "scripts": {
     "watch": "tsc -w -d",
     "build": "tsc -d",
