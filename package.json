@@ -1,6 +1,6 @@
 {
   "name": "@jsonic/multisource",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "",
   "main": "dist/multisource.js",
   "type": "commonjs",
@@ -19,6 +19,13 @@
   },
   "author": "",
   "license": "MIT",
+  "files":[
+    "aontu.ts",
+    "lib",
+    "dist",
+    "LICENSE",
+    "resolver"
+  ],
   "devDependencies": {
     "jsonic": "jsonicjs/jsonic#nextgen",
     "@hapi/code": "^8.0.3",
