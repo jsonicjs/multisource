@@ -1,6 +1,6 @@
 {
   "name": "@jsonic/multisource",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "",
   "main": "dist/multisource.js",
   "type": "commonjs",
@@ -9,15 +9,21 @@
     "watch": "tsc -w -d",
     "build": "tsc -d",
     "test": "lab -v -P test -t 50 --sourcemaps --transform node_modules/lab-transform-typescript -r console -o stdout -r html -o test/coverage.html",
-    "test-some": "lab -v -P test --sourcemaps --transform node_modules/lab-transform-typescript -g"
+    "test-some": "lab -v -P test --sourcemaps --transform node_modules/lab-transform-typescript -g",
+    "test-web": "echo no-test-web",
+    "clean": "rm -rf node_modules yarn.lock package-lock.json",
+    "reset": "npm run clean && npm i && npm run build && npm test",
+    "repo-tag": "REPO_VERSION=`node -e \"console.log(require('./package').version)\"` && echo TAG: v$REPO_VERSION && git commit -a -m v$REPO_VERSION && git push && git tag v$REPO_VERSION && git push --tags;",
+    "repo-publish": "npm run clean && npm i && npm run repo-publish-quick",
+    "repo-publish-quick": "npm run build && npm run test && npm run test-web && npm run repo-tag && npm publish --registry http://registry.npmjs.org --access=public"
   },
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "jsonic": "^1.0.1",
+    "jsonic": "jsonicjs/jsonic#nextgen",
     "@hapi/code": "^8.0.3",
-    "@hapi/lab": "^24.1.1",
+    "@hapi/lab": "^24.2.0",
     "lab-transform-typescript": "^3.0.1",
-    "typescript": "^4.2.3"
+    "typescript": "^4.2.4"
   }
 }
