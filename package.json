@@ -1,6 +1,6 @@
 {
   "name": "@jsonic/multisource",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "",
   "main": "dist/multisource.js",
   "type": "commonjs",
@@ -19,12 +19,13 @@
   },
   "author": "",
   "license": "MIT",
-  "files":[
-    "aontu.ts",
+  "files": [
+    "*.ts",
+    "*.js",
     "lib",
-    "dist",
     "LICENSE",
-    "resolver"
+    "resolver",
+    "dist"
   ],
   "devDependencies": {
     "jsonic": "jsonicjs/jsonic#nextgen",
