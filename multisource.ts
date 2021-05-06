@@ -14,17 +14,20 @@ import { Jsonic, Plugin, Rule, RuleSpec, Context, util } from 'jsonic'
 
 let DEFAULTS = {
   markchar: '@',
-  basepath: '.',
+  //basepath: '.',
 }
 
 
-type Resolver = (
-  path: string,
-  jsonic: Jsonic,
-  ctx: Context,
-  opts: any
-) => any
+interface Resolution {
+  path: string
+  src?: string
+}
 
+
+type Resolver = (path: string, ctx: Context) => Resolution
+
+
+const TOP = Symbol('TOP')
 
 
 let MultiSource: Plugin = function multisource(jsonic: Jsonic) {
@@ -51,72 +54,43 @@ let MultiSource: Plugin = function multisource(jsonic: Jsonic) {
   //let csv = jsonic.make().use(Csv, jsonic.options.plugin.csv || {})
 
   let ST = jsonic.token.ST
-  let TX = jsonic.token.TX
   let AT = jsonic.token(tn)
 
 
   jsonic.rule('val', (rs: RuleSpec) => {
     rs.def.open.push(
-      { s: [AT, ST] },
-      { s: [AT, TX] }
+      { s: [AT, ST] }, // NOTE: must use strings to specify path: @"...path..."
     )
 
     let orig_bc = rs.def.bc
     rs.def.bc = function(rule: Rule, ctx: Context) {
       if (rule.open[0] && AT === rule.open[0].tin) {
 
-        // TODO: test TX=foo/bar as @"foo/bar" works but @foo/bar does not!
-        // let filepath = rule.open[1].val
-        // let fullpath = Path.resolve(ctx.meta.basepath || popts.basepath, filepath)
-        // let filedesc = Path.parse(fullpath)
-        // let basepath = filedesc.dir
-        // let file_ext = filedesc.ext.toLowerCase()
-
+        let val: any = undefined
         let path = rule.open[1].val
-        let val = resolver(path, jsonic, ctx, popts)
+        let res = resolver(path, ctx)
 
-        // if ('.js' === file_ext) {
-        //   val = require(fullpath)
-        //   if ('function' === typeof val) {
-        //     val = val({ fullpath, filepath, rule, ctx })
-        //   }
-        // }
+        if (null != res.src) {
+          let msmeta = ctx.meta.multisource || {}
+          let meta = {
+            ...ctx.meta,
+            multisource: {
+              ...msmeta,
+              path: res.path
+            }
+          }
+          val = jsonic(res.src, meta)
 
-        // // Manually load file contents
-        // else {
-        //   let partial_ctx = {
-        //     root: ctx.root
-        //   }
+          // console.log('MSMETA', path, msmeta)
 
-        //   let content: string
+          if (msmeta.deps) {
+            let parent = msmeta.path || TOP
+            if (null != parent) {
+              (msmeta.deps[parent] = msmeta.deps[parent] || {})[res.path] = {}
+            }
+          }
 
-        //   if ('.jsonic' === file_ext) {
-        //     content = Fs.readFileSync(fullpath).toString()
-        //     val = jsonic(
-        //       content,
-        //       { basepath: basepath, fileName: fullpath },
-        //       partial_ctx)
-        //   }
-
-        //   /*
-        //   if ('.json' === file_ext) {
-        //     content = Fs.readFileSync(fullpath).toString()
-        //     val = json(content, { fileName: fullpath }, partial_ctx)
-        //   }
-
-        //   else if ('.csv' === file_ext) {
-        //     content = Fs.readFileSync(fullpath).toString()
-        //     val = csv(content, {}, partial_ctx)
-        //   }
-        //   */
-
-        //   else {
-        //     return {
-        //       err: 'multifile_unsupported_file',
-        //       path: fullpath,
-        //     }
-        //   }
-        // }
+        }
 
         rule.open[0].val = val
       }
@@ -127,4 +101,4 @@ let MultiSource: Plugin = function multisource(jsonic: Jsonic) {
   })
 }
 
-export { MultiSource, Resolver }
+export { MultiSource, Resolver, Resolution, TOP }

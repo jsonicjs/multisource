@@ -2,42 +2,41 @@
 import Fs from 'fs'
 import Path from 'path'
 
-import { Jsonic, Context } from 'jsonic'
 
-import { Resolver } from '../multisource'
 
-const FileResolver: Resolver = (
-  path: string,
-  jsonic: Jsonic,
-  ctx: Context,
-  opts: any
-) => {
+import { Context } from 'jsonic'
+import { Resolver, Resolution } from '../multisource'
 
-  // TODO: needs more thought
-  let basepath = ctx.meta.basepath || opts.basepath
 
-  let fullpath = Path.resolve(basepath, path)
-  let filedesc = Path.parse(fullpath)
-  let filebase = filedesc.dir
-  // let file_ext = filedesc.ext.toLowerCase()
+function makeFileResolver(): Resolver {
 
-  let content = Fs.readFileSync(fullpath).toString()
+  return function FileResolver(path: string, ctx: Context): Resolution {
+    let basefile = ctx.meta.multisource ? ctx.meta.multisource.path : undefined
+    basefile = null == basefile ? ctx.opts.plugin.multisource.path : basefile
 
-  let partial_ctx = {
-    root: ctx.root
+    let fstats = Fs.statSync(basefile)
+    let basepath = basefile
+
+    if (fstats.isFile()) {
+      let basedesc = Path.parse(basefile)
+      basepath = basedesc.dir
+    }
+
+    let fullpath = Path.isAbsolute(path) ? path :
+      (null == basepath ? path : Path.resolve(basepath, path))
+
+    // console.log('FILE', basepath, path, fullpath)
+
+    let src = Fs.readFileSync(fullpath).toString()
+
+    return {
+      path: fullpath,
+      src,
+    }
   }
-
-
-  let val = jsonic(
-    content,
-    { basepath: filebase, fileName: fullpath },
-    partial_ctx
-  )
-
-  return val
 }
 
 
 export {
-  FileResolver
+  makeFileResolver
 }
