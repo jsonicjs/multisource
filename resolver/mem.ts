@@ -6,19 +6,25 @@ import { Resolver, Resolution } from '../multisource'
 
 function makeMemResolver(map: { [fullpath: string]: string }): Resolver {
 
-  return function MemResolver(path: string, ctx: Context): Resolution {
-    let basepath = ctx.meta.multisource ? ctx.meta.multisource.path : undefined
-    basepath = null == basepath ? ctx.opts.plugin.multisource.path : basepath
+  return function MemResolver(path: string, ctx?: Context): Resolution {
+    let msmeta = ctx && ctx.meta && ctx.meta.multisource || {}
+    let popts = ctx && ctx.opts && ctx.opts &&
+      ctx.opts.plugin && ctx.opts.plugin.multisource || {}
 
-    let fullpath = path.startsWith('/') ? path :
-      (null == basepath ? '' : basepath) + '/' + path
+    let basepath = null == msmeta.path ? popts.path : msmeta.path
 
-    // console.log('MEM', basepath, path, fullpath)
+    let isabsolute = path.startsWith('/')
+    let fullpath =
+      isabsolute ? path : (null == basepath ? '' : basepath) + '/' + path
+
+    //console.log('MEM', path, basepath, isabsolute, fullpath)
 
     let src = map[fullpath]
 
     return {
-      path: fullpath,
+      path: path,
+      full: fullpath,
+      base: basepath,
       src,
     }
   }

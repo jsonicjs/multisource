@@ -10,9 +10,15 @@ import { Resolver, Resolution } from '../multisource'
 
 function makeFileResolver(): Resolver {
 
-  return function FileResolver(path: string, ctx: Context): Resolution {
-    let basefile = ctx.meta.multisource ? ctx.meta.multisource.path : undefined
-    basefile = null == basefile ? ctx.opts.plugin.multisource.path : basefile
+  return function FileResolver(path: string, ctx?: Context): Resolution {
+    let msmeta = ctx && ctx.meta && ctx.meta.multisource || {}
+    let popts = ctx && ctx.opts && ctx.opts &&
+      ctx.opts.plugin && ctx.opts.plugin.multisource || {}
+
+    let basefile =
+      null == msmeta.path ?
+        null == popts.path ?
+          path : popts.path : msmeta.path
 
     let fstats = Fs.statSync(basefile)
     let basepath = basefile
@@ -22,15 +28,16 @@ function makeFileResolver(): Resolver {
       basepath = basedesc.dir
     }
 
-    let fullpath = Path.isAbsolute(path) ? path :
+    let isabsolute = Path.isAbsolute(path)
+    let fullpath = isabsolute ? path :
       (null == basepath ? path : Path.resolve(basepath, path))
-
-    // console.log('FILE', basepath, path, fullpath)
 
     let src = Fs.readFileSync(fullpath).toString()
 
     return {
-      path: fullpath,
+      path: path,
+      full: fullpath,
+      base: basepath,
       src,
     }
   }

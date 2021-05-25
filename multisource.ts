@@ -3,6 +3,11 @@
 'use strict'
 
 import { Jsonic, Plugin, Rule, RuleSpec, Context, util } from 'jsonic'
+
+// TODO: get package sub file refs working with ts
+import { makeMemResolver } from './resolver/mem'
+import { makeFileResolver } from './resolver/file'
+
 //import { Json } from './json'
 //import { Csv } from './csv'
 /* $lab:coverage:on$ */
@@ -12,19 +17,40 @@ import { Jsonic, Plugin, Rule, RuleSpec, Context, util } from 'jsonic'
 // TODO: jsonic-cli should provide basepath
 // TODO: auto load index.jsonic, index.<folder-name>.jsonic
 
+
 let DEFAULTS = {
   markchar: '@',
-  //basepath: '.',
+}
+
+
+interface Meta {
+  path?: string  // Base path for this parse run.
+  deps?: DependencyMap // Provide an empty object to be filled.
 }
 
 
 interface Resolution {
-  path: string
-  src?: string
+  path: string // Original path (possibly relative)
+  full: string // Normalized full path
+  base: string // Current base path
+  src?: string // Undefined if no resolution
 }
 
 
-type Resolver = (path: string, ctx: Context) => Resolution
+type Resolver = (path: string, ctx?: Context) => Resolution
+
+
+interface Dependency {
+  tar: string | typeof TOP, // Target that depends on source (src).
+  src: string, // Source that target (tar) depends on.
+  wen: number, // Time of resolution.
+}
+
+type DependencyMap = {
+  [tar_full_path: string]: {
+    [src_full_path: string]: Dependency
+  }
+}
 
 
 const TOP = Symbol('TOP')
@@ -66,27 +92,36 @@ let MultiSource: Plugin = function multisource(jsonic: Jsonic) {
     rs.def.bc = function(rule: Rule, ctx: Context) {
       if (rule.open[0] && AT === rule.open[0].tin) {
 
+        // console.log('MS res meta', ctx.meta)
+
         let val: any = undefined
         let path = rule.open[1].val
         let res = resolver(path, ctx)
 
         if (null != res.src) {
-          let msmeta = ctx.meta.multisource || {}
+          let msmeta: Meta = ctx.meta.multisource || {}
           let meta = {
             ...ctx.meta,
             multisource: {
               ...msmeta,
-              path: res.path
+              path: res.full
             }
           }
+
+          // console.log('MSMETA', path, msmeta, meta)
+
+
           val = jsonic(res.src, meta)
 
-          // console.log('MSMETA', path, msmeta)
-
           if (msmeta.deps) {
-            let parent = msmeta.path || TOP
+            let depmap = (msmeta.deps as DependencyMap)
+            let parent = (msmeta.path || TOP) as string
             if (null != parent) {
-              (msmeta.deps[parent] = msmeta.deps[parent] || {})[res.path] = {}
+              (depmap[parent] = depmap[parent] || {})[res.full] = {
+                tar: parent,
+                src: res.full,
+                wen: Date.now()
+              }
             }
           }
 
@@ -101,4 +136,17 @@ let MultiSource: Plugin = function multisource(jsonic: Jsonic) {
   })
 }
 
-export { MultiSource, Resolver, Resolution, TOP }
+
+export {
+  MultiSource,
+  Resolver,
+  Resolution,
+  TOP,
+
+  // Re-exported from jsonic for convenience
+  Context,
+
+  // TODO: remove for better tree shaking
+  makeFileResolver,
+  makeMemResolver,
+}

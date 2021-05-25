@@ -21,20 +21,33 @@ import { makeMemResolver } from '../resolver/mem'
 
 describe('multisource', function() {
 
+  it('happy', () => {
+    let j0 = Jsonic.make().use(MultiSource, {
+      resolver: makeMemResolver({
+        '/a': 'b:1',
+      }),
+    })
+
+    expect(j0('c:1')).equals({ c: 1 })
+    expect(j0('c:@"/a"')).equals({ c: { b: 1 } })
+    expect(j0('x:y:1, x:z:2')).equals({ x: { y: 1, z: 2 } })
+
+  })
+
+
   it('file', () => {
     let r0 = makeFileResolver()
     let j0 = Jsonic.make().use(MultiSource, {
-      path: __dirname,
       resolver: r0,
     })
 
     let deps = {}
-    expect(j0('a:1,b:@"./t01.jsonic"', { multisource: { deps } }))
+    expect(j0('a:1,b:@"./t01.jsonic"', { multisource: { path: __dirname, deps } }))
       .equals({ a: 1, b: { c: 2 } })
     //console.dir(deps, { depth: null })
 
     deps = {}
-    expect(j0('a:1,b:@"./t02.jsonic",c:3', { multisource: { deps } }))
+    expect(j0('a:1,b:@"./t02.jsonic",c:3', { multisource: { path: __dirname, deps } }))
       .equals({ a: 1, b: { d: 2, e: { f: 4 } }, c: 3 })
     //console.dir(deps, { depth: null })
   })
@@ -63,13 +76,28 @@ describe('multisource', function() {
       })
 
     //console.dir(deps, { depth: null })
-    expect(deps).equal({
-      '/b/c': { '/a': {} },
-      '/b': { '/b/c': {} },
-      [TOP]: { '/a': {}, '/d': {}, '/b': {}, '/b/c': {} }
+    expect(remove(deps, 'wen')).equal({
+      '/b/c': { '/a': { tar: '/b/c', src: '/a' } },
+      '/b': { '/b/c': { tar: '/b', src: '/b/c' } },
+      [TOP]: {
+        '/a': { tar: TOP, src: '/a' },
+        '/d': { tar: TOP, src: '/d' },
+        '/b': { tar: TOP, src: '/b' },
+        '/b/c': { tar: TOP, src: '/b/c' }
+      }
     })
   })
 
 })
 
 
+function remove(o: any, k: string) {
+  if (null != o && 'object' === typeof (o)) {
+    delete o[k]
+    remove(o[TOP], k)
+    for (let p in o) {
+      remove(o[p], k)
+    }
+  }
+  return o
+}
