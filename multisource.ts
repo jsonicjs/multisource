@@ -108,7 +108,7 @@ let MultiSource: Plugin = function multisource(jsonic: Jsonic) {
             }
           }
 
-          // console.log('MSMETA', path, msmeta, meta)
+          // console.log('MSMETA path', path, res.full)
 
 
           val = jsonic(res.src, meta)
