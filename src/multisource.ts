@@ -11,7 +11,6 @@ import { makeJavaScriptProcessor } from './processor/js'
 
 
 // TODO: jsonic-cli should provide basepath
-// TODO: auto load index.jsonic, index.<folder-name>.jsonic
 
 
 
