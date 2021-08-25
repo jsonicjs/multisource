@@ -22,6 +22,7 @@ function makeMemResolver(filemap) {
         let res = {
             ...ps,
             src,
+            found: null != src
         };
         return res;
     };

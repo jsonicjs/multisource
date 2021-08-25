@@ -80,6 +80,17 @@ describe('multisource', () => {
   })
 
 
+  test('error', () => {
+    const o: MultiSourceOptions = {
+      resolver: makeMemResolver({}),
+    }
+    const j = Jsonic.make().use(MultiSource, o)
+
+    // j('x:@a')
+    expect(() => j('x:@a')).toThrow(/multisource_not_found.*:1:3/s)
+  })
+
+
 
   it('file', () => {
     let j0 = Jsonic.make().use(MultiSource, {

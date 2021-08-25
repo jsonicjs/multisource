@@ -44,6 +44,7 @@ function makeMemResolver(filemap: { [fullpath: string]: string }): Resolver {
     let res: Resolution = {
       ...ps,
       src,
+      found: null != src
     }
 
     return res

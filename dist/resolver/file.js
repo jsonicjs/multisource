@@ -30,6 +30,7 @@ function makeFileResolver() {
         let res = {
             ...ps,
             src,
+            found: null != src
         };
         return res;
     };

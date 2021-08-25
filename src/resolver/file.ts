@@ -53,6 +53,7 @@ function makeFileResolver(): Resolver {
     let res: Resolution = {
       ...ps,
       src,
+      found: null != src
     }
 
     return res

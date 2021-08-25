@@ -21,15 +21,25 @@ const MultiSource = (jsonic, popts) => {
         let ext = implictExt[extI];
         implictExt[extI] = ext.startsWith('.') ? ext : '.' + ext;
     }
+    jsonic.options({
+        error: {
+            multisource_not_found: 'source not found: $path'
+        },
+        hint: {
+            multisource_not_found: 'TODO: PATH: $path DETAILS: $details'
+        }
+    });
     // Define a directive that can load content from multiple sources.
     let dopts = {
         name: 'multisource',
         open: markchar,
         action: (rule, ctx) => {
+            var _a, _b;
             let spec = rule.child.node;
-            // console.log('MS', spec)
-            // TODO: generate an error token if cannot resolve
             let res = resolver(spec, popts, rule, ctx, jsonic);
+            if (!res.found) {
+                return (_b = (_a = rule.parent) === null || _a === void 0 ? void 0 : _a.open[0]) === null || _b === void 0 ? void 0 : _b.bad('multisource_not_found', { ...res });
+            }
             res.kind = null == res.kind ? NONE : res.kind;
             let proc = processor[res.kind] || processor[NONE];
             proc(res, popts, rule, ctx, jsonic);
@@ -80,6 +90,7 @@ function resolvePathSpec(popts, ctx, spec, resolvefolder) {
         full,
         base,
         abs,
+        found: false,
     };
     // console.log('RES', res)
     return res;

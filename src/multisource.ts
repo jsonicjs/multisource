@@ -28,7 +28,6 @@ const NONE = ''
 // Options for this plugin.
 type MultiSourceOptions = {
   resolver: Resolver  // Resolve multisource spec to source
-
   path?: string     // Base path, prefixed to paths
   markchar?: string  // Character to mark start of multisource directive
   processor?: { [kind: string]: Processor },
@@ -50,6 +49,7 @@ type PathSpec = {
 type Resolution = PathSpec & {
   src?: string // Undefined if no resolution
   val?: any // Undefined if no resolution
+  found: boolean // True if source file was found 
 }
 
 
@@ -104,6 +104,16 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
     implictExt[extI] = ext.startsWith('.') ? ext : '.' + ext
   }
 
+  jsonic.options({
+    error: {
+      multisource_not_found: 'source not found: $path'
+    },
+    hint: {
+      multisource_not_found: 'TODO: PATH: $path DETAILS: $details'
+    }
+  })
+
+
   // Define a directive that can load content from multiple sources.
   let dopts: DirectiveOptions = {
     name: 'multisource',
@@ -111,10 +121,11 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
     action: (rule: Rule, ctx: Context) => {
       let spec = rule.child.node
 
-      // console.log('MS', spec)
-
-      // TODO: generate an error token if cannot resolve
       let res = resolver(spec, popts, rule, ctx, jsonic)
+      if (!res.found) {
+        return rule.parent?.open[0]?.bad('multisource_not_found', { ...res })
+      }
+
       res.kind = null == res.kind ? NONE : res.kind
 
       let proc = processor[res.kind] || processor[NONE]
@@ -187,6 +198,7 @@ function resolvePathSpec(
     full,
     base,
     abs,
+    found: false,
   }
 
   // console.log('RES', res)
