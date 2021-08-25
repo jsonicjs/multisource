@@ -1,84 +1,88 @@
+"use strict";
 /* Copyright (c) 2021 Richard Rodger, MIT License */
-/* $lab:coverage:off$ */
-'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.makeMemResolver = exports.makeFileResolver = exports.TOP = exports.MultiSource = void 0;
-const jsonic_1 = require("jsonic");
-// TODO: get package sub file refs working with ts
-const mem_1 = require("./resolver/mem");
-Object.defineProperty(exports, "makeMemResolver", { enumerable: true, get: function () { return mem_1.makeMemResolver; } });
-const file_1 = require("./resolver/file");
-Object.defineProperty(exports, "makeFileResolver", { enumerable: true, get: function () { return file_1.makeFileResolver; } });
-//import { Json } from './json'
-//import { Csv } from './csv'
-/* $lab:coverage:on$ */
-// TODO: .jsonic suffix optional
-// TODO: jsonic-cli should provide basepath
-// TODO: auto load index.jsonic, index.<folder-name>.jsonic
-let DEFAULTS = {
-    markchar: '@',
-};
+exports.TOP = exports.NONE = exports.resolvePathSpec = exports.MultiSource = void 0;
+const directive_1 = require("@jsonic/directive");
+const jsonic_1 = require("./processor/jsonic");
+const js_1 = require("./processor/js");
+// Unknown source reference file extension.
+const NONE = '';
+exports.NONE = NONE;
+// The top of the dependence tree.
 const TOP = Symbol('TOP');
 exports.TOP = TOP;
-let MultiSource = function multisource(jsonic) {
-    let popts = jsonic_1.util.deep({}, DEFAULTS, jsonic.options.plugin.multisource);
-    let markchar = popts.markchar;
-    let resolver = popts.resolver;
-    let tn = '#T<' + markchar + '>';
-    jsonic.options({
-        token: {
-            [tn]: { c: markchar }
-        },
-        error: {
-            multifile_unsupported_file: 'unsupported file: $path'
-        },
-        hint: {
-            multifile_unsupported_file: `This file type is not supported and cannot be parsed: $path.`,
-        },
-    });
-    // These inherit previous plugins - they are not clean new instances.
-    //let json = jsonic.make().use(Json, jsonic.options.plugin.json || {})
-    //let csv = jsonic.make().use(Csv, jsonic.options.plugin.csv || {})
-    let ST = jsonic.token.ST;
-    let AT = jsonic.token(tn);
-    jsonic.rule('val', (rs) => {
-        rs.def.open.push({ s: [AT, ST] });
-        let orig_bc = rs.def.bc;
-        rs.def.bc = function (rule, ctx) {
-            if (rule.open[0] && AT === rule.open[0].tin) {
-                // console.log('MS res meta', ctx.meta)
-                let val = undefined;
-                let path = rule.open[1].val;
-                let res = resolver(path, ctx);
-                if (null != res.src) {
-                    let msmeta = ctx.meta.multisource || {};
-                    let meta = {
-                        ...ctx.meta,
-                        multisource: {
-                            ...msmeta,
-                            path: res.full
-                        }
-                    };
-                    // console.log('MSMETA path', path, res.full)
-                    val = jsonic(res.src, meta);
-                    if (msmeta.deps) {
-                        let depmap = msmeta.deps;
-                        let parent = (msmeta.path || TOP);
-                        if (null != parent) {
-                            (depmap[parent] = depmap[parent] || {})[res.full] = {
-                                tar: parent,
-                                src: res.full,
-                                wen: Date.now()
-                            };
-                        }
-                    }
-                }
-                rule.open[0].val = val;
-            }
-            return orig_bc(...arguments);
-        };
-        return rs;
-    });
+const MultiSource = (jsonic, popts) => {
+    const markchar = popts.markchar;
+    const resolver = popts.resolver;
+    const processor = popts.processor;
+    // Normalize implicit extensions to format `.name`. 
+    const implictExt = (popts.implictExt || []);
+    for (let extI = 0; extI < implictExt.length; extI++) {
+        let ext = implictExt[extI];
+        implictExt[extI] = ext.startsWith('.') ? ext : '.' + ext;
+    }
+    // Define a directive that can load content from multiple sources.
+    let dopts = {
+        name: 'multisource',
+        open: markchar,
+        action: (rule, ctx) => {
+            let spec = rule.child.node;
+            // console.log('MS', spec)
+            // TODO: generate an error token if cannot resolve
+            let res = resolver(spec, popts, rule, ctx, jsonic);
+            res.kind = null == res.kind ? NONE : res.kind;
+            let proc = processor[res.kind] || processor[NONE];
+            proc(res, popts, rule, ctx, jsonic);
+            rule.node = res.val;
+        }
+    };
+    jsonic.use(directive_1.Directive, dopts);
 };
 exports.MultiSource = MultiSource;
+// Convenience maker for Processors
+function makeProcessor(process) {
+    return (res) => res.val = process(res.src, res);
+}
+// Default is just to insert file contents as a string.
+const defaultProcessor = makeProcessor((src) => src);
+// TODO: use json plugin to get better error msgs.
+const jsonProcessor = makeProcessor((src) => null == src ? undefined : JSON.parse(src));
+const jsonicProcessor = jsonic_1.makeJsonicProcessor();
+const jsProcessor = js_1.makeJavaScriptProcessor();
+MultiSource.defaults = {
+    markchar: '@',
+    processor: {
+        [NONE]: defaultProcessor,
+        jsonic: jsonicProcessor,
+        jsc: jsonicProcessor,
+        json: jsonProcessor,
+        js: jsProcessor,
+    },
+    implictExt: ['jsonic', 'jsc', 'json', 'js']
+};
+function resolvePathSpec(popts, ctx, spec, resolvefolder) {
+    var _a;
+    let msmeta = (_a = ctx.meta) === null || _a === void 0 ? void 0 : _a.multisource;
+    let base = resolvefolder((null == msmeta || null == msmeta.path) ? popts.path : msmeta.path);
+    let path = 'string' === typeof (spec) ? spec :
+        null != spec.path ? '' + spec.path :
+            undefined;
+    let abs = !!((path === null || path === void 0 ? void 0 : path.startsWith('/')) || (path === null || path === void 0 ? void 0 : path.startsWith('\\')));
+    let full = abs ? path :
+        (null != path && '' != path) ?
+            (null != base && '' != base) ? (base + '/' + path) :
+                path :
+            undefined;
+    let kind = null == full ? NONE : (full.match(/\.([^.]*)$/) || [NONE, NONE])[1];
+    let res = {
+        kind,
+        path,
+        full,
+        base,
+        abs,
+    };
+    // console.log('RES', res)
+    return res;
+}
+exports.resolvePathSpec = resolvePathSpec;
 //# sourceMappingURL=multisource.js.map

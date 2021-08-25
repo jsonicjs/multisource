@@ -5,33 +5,47 @@
   "main": "dist/multisource.js",
   "type": "commonjs",
   "types": "dist/multisource.d.ts",
+  "homepage": "https://github.com/jsonicjs/multisource",
+  "keywords": [
+    "pattern",
+    "matcher",
+    "object",
+    "property",
+    "json"
+  ],
+  "author": "Richard Rodger, http://richardrodger.com",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jsonicjs/multisource.git"
+  },
   "scripts": {
+    "test": "jest --coverage",
+    "test-some": "jest -t",
+    "test-watch": "jest --coverage --watchAll",
     "watch": "tsc -w -d",
-    "build": "tsc -d",
-    "test": "lab -v -P test -t 50 --sourcemaps --transform node_modules/lab-transform-typescript -r console -o stdout -r html -o test/coverage.html",
-    "test-some": "lab -v -P test --sourcemaps --transform node_modules/lab-transform-typescript -g",
-    "test-web": "echo no-test-web",
+    "build": "tsc -d && cp directive.js directive.min.js && browserify -o directive.min.js -e directive.js -s @JsonicDirective -im -i assert -p tinyify",
+    "prettier": "prettier --write --no-semi --single-quote **/*.ts",
     "clean": "rm -rf node_modules yarn.lock package-lock.json",
-    "reset": "npm run clean && npm i && npm run build && npm test",
+    "reset": "npm run clean && npm i && npm test",
     "repo-tag": "REPO_VERSION=`node -e \"console.log(require('./package').version)\"` && echo TAG: v$REPO_VERSION && git commit -a -m v$REPO_VERSION && git push && git tag v$REPO_VERSION && git push --tags;",
     "repo-publish": "npm run clean && npm i && npm run repo-publish-quick",
-    "repo-publish-quick": "npm run build && npm run test && npm run test-web && npm run repo-tag && npm publish --registry http://registry.npmjs.org --access=public"
+    "repo-publish-quick": "npm run prettier && npm run build && npm run test && npm run test-web && npm run repo-tag && npm publish --registry http://registry.npmjs.org "
   },
-  "author": "",
   "license": "MIT",
   "files": [
     "*.ts",
     "*.js",
-    "lib",
+    "*.map",
     "LICENSE",
-    "resolver",
+    "src",
     "dist"
   ],
   "devDependencies": {
-    "jsonic": "jsonicjs/jsonic#4edd639987b75ef62a74e3904fb890f59d21379c",
-    "@hapi/code": "^8.0.3",
-    "@hapi/lab": "^24.3.0",
-    "lab-transform-typescript": "^3.0.1",
-    "typescript": "^4.3.5"
+    "@types/jest": "^26.0.24",
+    "jest": "^27.0.6",
+    "prettier": "^2.3.2",
+    "ts-jest": "^27.0.4",
+    "typescript": "^4.3.5",
+    "jsonic": "github:jsonicjs/jsonic#nextgen"
   }
 }

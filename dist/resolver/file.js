@@ -6,31 +6,53 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.makeFileResolver = void 0;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
+const multisource_1 = require("../multisource");
+const mem_1 = require("./mem");
 function makeFileResolver() {
-    return function FileResolver(path, ctx) {
-        let msmeta = ctx && ctx.meta && ctx.meta.multisource || {};
-        let popts = ctx && ctx.opts && ctx.opts &&
-            ctx.opts.plugin && ctx.opts.plugin.multisource || {};
-        let basefile = null == msmeta.path ?
-            null == popts.path ?
-                path : popts.path : msmeta.path;
-        let fstats = fs_1.default.statSync(basefile);
-        let basepath = basefile;
-        if (fstats.isFile()) {
-            let basedesc = path_1.default.parse(basefile);
-            basepath = basedesc.dir;
+    return function FileResolver(spec, popts, _rule, ctx) {
+        let ps = multisource_1.resolvePathSpec(popts, ctx, spec, resolvefolder);
+        let src = undefined;
+        // console.log(ps)
+        if (null != ps.full) {
+            ps.full = path_1.default.resolve(ps.full);
+            src = load(ps.full);
+            if (null == src && multisource_1.NONE === ps.kind) {
+                let potentials = mem_1.buildPotentials(ps, popts, (...s) => path_1.default.resolve(s.reduce((a, p) => path_1.default.join(a, p))));
+                for (let path of potentials) {
+                    if (null != (src = load(path))) {
+                        ps.full = path;
+                        ps.kind = (path.match(/\.([^.]*)$/) || [multisource_1.NONE, multisource_1.NONE])[1];
+                        break;
+                    }
+                }
+            }
         }
-        let isabsolute = path_1.default.isAbsolute(path);
-        let fullpath = isabsolute ? path :
-            (null == basepath ? path : path_1.default.resolve(basepath, path));
-        let src = fs_1.default.readFileSync(fullpath).toString();
-        return {
-            path: path,
-            full: fullpath,
-            base: basepath,
+        let res = {
+            ...ps,
             src,
         };
+        return res;
     };
 }
 exports.makeFileResolver = makeFileResolver;
+function resolvefolder(path) {
+    let folder = path;
+    let pathstats = fs_1.default.statSync(path);
+    if (pathstats.isFile()) {
+        let pathdesc = path_1.default.parse(path);
+        folder = pathdesc.dir;
+    }
+    return folder;
+}
+// TODO: in multisource.ts, generate an error token if cannot resolve
+function load(path) {
+    // console.log('LOAD', path)
+    try {
+        return fs_1.default.readFileSync(path).toString();
+    }
+    catch (e) {
+        // NOTE: don't need this, as in all cases, we consider failed
+        // reads to indicate non-existence.
+    }
+}
 //# sourceMappingURL=file.js.map
