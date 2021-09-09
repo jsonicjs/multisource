@@ -1,57 +1,46 @@
 /* Copyright (c) 2021 Richard Rodger, MIT License */
 
-
 import { Jsonic, Context, Rule, Plugin } from 'jsonic'
 import { Directive, DirectiveOptions } from '@jsonic/directive'
 
 import { makeJsonicProcessor } from './processor/jsonic'
 import { makeJavaScriptProcessor } from './processor/js'
 
-
-
-
 // TODO: jsonic-cli should provide basepath
 
-
-
-// Jsonic parsing meta data. In this case, storing the dependency tree. 
+// Jsonic parsing meta data. In this case, storing the dependency tree.
 interface MultiSourceMeta {
-  path?: string  // Base path for this parse run.
+  path?: string // Base path for this parse run.
   deps?: DependencyMap // Provide an empty object to be filled.
 }
-
 
 // Unknown source reference file extension.
 const NONE = ''
 
-
 // Options for this plugin.
 type MultiSourceOptions = {
-  resolver: Resolver  // Resolve multisource spec to source
-  path?: string     // Base path, prefixed to paths
-  markchar?: string  // Character to mark start of multisource directive
-  processor?: { [kind: string]: Processor },
+  resolver: Resolver // Resolve multisource spec to source
+  path?: string // Base path, prefixed to paths
+  markchar?: string // Character to mark start of multisource directive
+  processor?: { [kind: string]: Processor }
   implictExt?: []
 }
 
-
 // The path to the source, including base prefix (if any).
 type PathSpec = {
-  kind: string  // Source kind, usually normalized file extension
+  kind: string // Source kind, usually normalized file extension
   path?: string // Original path (possibly relative)
   full?: string // Normalized full path
   base?: string // Current base path
-  abs: boolean  // Path was absolute
+  abs: boolean // Path was absolute
 }
-
 
 // The source and where it was found.
 type Resolution = PathSpec & {
   src?: string // Undefined if no resolution
   val?: any // Undefined if no resolution
-  found: boolean // True if source file was found 
+  found: boolean // True if source file was found
 }
-
 
 // Resolve the source.
 type Resolver = (
@@ -59,9 +48,8 @@ type Resolver = (
   popts: MultiSourceOptions,
   rule: Rule,
   ctx: Context,
-  jsonic: Jsonic,
+  jsonic: Jsonic
 ) => Resolution
-
 
 // Process the source into a value.
 type Processor = (
@@ -69,15 +57,13 @@ type Processor = (
   popts: MultiSourceOptions,
   rule: Rule,
   ctx: Context,
-  jsonic: Jsonic,
+  jsonic: Jsonic
 ) => void
 
-
-
 type Dependency = {
-  tar: string | typeof TOP, // Target that depends on source (src).
-  src: string, // Source that target (tar) depends on.
-  wen: number, // Time of resolution.
+  tar: string | typeof TOP // Target that depends on source (src).
+  src: string // Source that target (tar) depends on.
+  wen: number // Time of resolution.
 }
 
 // A flattened dependency tree (assumes each element is a unique full path).
@@ -87,17 +73,15 @@ type DependencyMap = {
   }
 }
 
-
 // The top of the dependence tree.
 const TOP = Symbol('TOP')
 
-
 const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
-  const markchar = (popts.markchar as string)
+  const markchar = popts.markchar as string
   const resolver = popts.resolver as Resolver
-  const processor = (popts.processor as { [kind: string]: Processor })
+  const processor = popts.processor as { [kind: string]: Processor }
 
-  // Normalize implicit extensions to format `.name`. 
+  // Normalize implicit extensions to format `.name`.
   const implictExt = (popts.implictExt || []) as string[]
   for (let extI = 0; extI < implictExt.length; extI++) {
     let ext = implictExt[extI]
@@ -106,13 +90,12 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
 
   jsonic.options({
     error: {
-      multisource_not_found: 'source not found: $path'
+      multisource_not_found: 'source not found: $path',
     },
     hint: {
-      multisource_not_found: 'TODO: PATH: $path DETAILS: $details'
-    }
+      multisource_not_found: 'TODO: PATH: $path DETAILS: $details',
+    },
   })
-
 
   // Define a directive that can load content from multiple sources.
   let dopts: DirectiveOptions = {
@@ -123,7 +106,7 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
 
       let res = resolver(spec, popts, rule, ctx, jsonic)
       if (!res.found) {
-        return rule.parent?.open[0]?.bad('multisource_not_found', { ...res })
+        return rule.parent?.o0.bad('multisource_not_found', { ...res })
       }
 
       res.kind = null == res.kind ? NONE : res.kind
@@ -132,28 +115,26 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
       proc(res, popts, rule, ctx, jsonic)
 
       rule.node = res.val
-    }
+    },
   }
   jsonic.use(Directive, dopts)
 }
 
-
 // Convenience maker for Processors
 function makeProcessor(process: (src: string, res: Resolution) => any) {
-  return (res: Resolution) => res.val = process((res.src as string), res)
+  return (res: Resolution) => (res.val = process(res.src as string, res))
 }
-
 
 // Default is just to insert file contents as a string.
 const defaultProcessor = makeProcessor((src: string) => src)
 
 // TODO: use json plugin to get better error msgs.
 const jsonProcessor = makeProcessor((src: string) =>
-  null == src ? undefined : JSON.parse(src))
+  null == src ? undefined : JSON.parse(src)
+)
 
 const jsonicProcessor = makeJsonicProcessor()
 const jsProcessor = makeJavaScriptProcessor()
-
 
 MultiSource.defaults = {
   markchar: '@',
@@ -164,31 +145,35 @@ MultiSource.defaults = {
     json: jsonProcessor,
     js: jsProcessor,
   },
-  implictExt: ['jsonic', 'jsc', 'json', 'js']
+  implictExt: ['jsonic', 'jsc', 'json', 'js'],
 }
-
 
 function resolvePathSpec(
   popts: MultiSourceOptions,
   ctx: Context,
   spec: any,
-  resolvefolder: (path: string) => string,
+  resolvefolder: (path: string) => string
 ): PathSpec {
   let msmeta = ctx.meta?.multisource
-  let base =
-    resolvefolder((null == msmeta || null == msmeta.path) ? popts.path : msmeta.path)
+  let base = resolvefolder(
+    null == msmeta || null == msmeta.path ? popts.path : msmeta.path
+  )
 
-  let path = 'string' === typeof (spec) ? spec :
-    null != spec.path ? '' + spec.path :
-      undefined
+  let path =
+    'string' === typeof spec
+      ? spec
+      : null != spec.path
+      ? '' + spec.path
+      : undefined
 
   let abs = !!(path?.startsWith('/') || path?.startsWith('\\'))
-  let full =
-    abs ? path :
-      (null != path && '' != path) ?
-        (null != base && '' != base) ? (base + '/' + path) :
-          path :
-        undefined
+  let full = abs
+    ? path
+    : null != path && '' != path
+    ? null != base && '' != base
+      ? base + '/' + path
+      : path
+    : undefined
 
   let kind = null == full ? NONE : (full.match(/\.([^.]*)$/) || [NONE, NONE])[1]
 
@@ -206,7 +191,6 @@ function resolvePathSpec(
   return res
 }
 
-
 export type {
   Resolver,
   Resolution,
@@ -217,7 +201,6 @@ export type {
   MultiSourceMeta,
   PathSpec,
 }
-
 
 export {
   MultiSource,
@@ -232,4 +215,3 @@ export {
   // makeFileResolver,
   // makeMemResolver,
 }
-

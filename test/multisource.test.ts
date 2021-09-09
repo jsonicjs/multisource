@@ -1,15 +1,12 @@
 /* Copyright (c) 2021 Richard Rodger and other contributors, MIT License */
 
-
 import { Jsonic } from 'jsonic'
 import { MultiSource, MultiSourceOptions } from '../src/multisource'
 import { makeJavaScriptProcessor } from '../src/processor/js'
 import { makeMemResolver } from '../src/resolver/mem'
 import { makeFileResolver } from '../src/resolver/file'
 
-
 describe('multisource', () => {
-
   test('happy', () => {
     const o: MultiSourceOptions = {
       resolver: makeMemResolver({
@@ -23,8 +20,8 @@ describe('multisource', () => {
         'h/index.h.jsc': 'h:7',
       }),
       processor: {
-        'js': makeJavaScriptProcessor({ evalOnly: true })
-      }
+        js: makeJavaScriptProcessor({ evalOnly: true }),
+      },
     }
     const j = Jsonic.make().use(MultiSource, o)
 
@@ -37,34 +34,34 @@ describe('multisource', () => {
     expect(j('g:@g,x:1')).toEqual({ g: { g: 6 }, x: 1 })
     expect(j('h:@h,x:1')).toEqual({ h: { h: 7 }, x: 1 })
 
-    expect(j(`
+    expect(
+      j(`
   x:a:@a.jsonic 
   x:b:@b.jsc 
   x:c:@c.txt 
   x:d:@d.json 
   x:e:@e.js 
   y:1
-  `))
-      .toEqual({
-        x: {
-          a: {
-            a: 1,
-          },
-          b: {
-            b: 2,
-          },
-          c: 'CCC',
-          d: {
-            d: 3,
-          },
-          e: {
-            e: 4,
-          },
+  `)
+    ).toEqual({
+      x: {
+        a: {
+          a: 1,
         },
-        y: 1,
-      })
+        b: {
+          b: 2,
+        },
+        c: 'CCC',
+        d: {
+          d: 3,
+        },
+        e: {
+          e: 4,
+        },
+      },
+      y: 1,
+    })
   })
-
 
   test('deps', () => {
     const o: MultiSourceOptions = {
@@ -79,7 +76,6 @@ describe('multisource', () => {
     expect(j('@a')).toEqual({ a: 1, b: { b: 2, c: { c: 3 } }, x: 99 })
   })
 
-
   test('error', () => {
     const o: MultiSourceOptions = {
       resolver: makeMemResolver({}),
@@ -90,24 +86,22 @@ describe('multisource', () => {
     expect(() => j('x:@a')).toThrow(/multisource_not_found.*:1:3/s)
   })
 
-
-
   it('file', () => {
     let j0 = Jsonic.make().use(MultiSource, {
       resolver: makeFileResolver(),
     })
 
     let deps = {}
-    expect(j0('a:1,b:@"./t01.jsonic"', { multisource: { path: __dirname, deps } }))
-      .toEqual({ a: 1, b: { c: 2 } })
+    expect(
+      j0('a:1,b:@"./t01.jsonic"', { multisource: { path: __dirname, deps } })
+    ).toEqual({ a: 1, b: { c: 2 } })
     // console.dir(deps, { depth: null })
 
     deps = {}
-    expect(j0('a:1,b:@"./t02.jsonic",c:3', { multisource: { path: __dirname, deps } }))
-      .toEqual({ a: 1, b: { d: 2, e: { f: 4 } }, c: 3 })
-
+    expect(
+      j0('a:1,b:@"./t02.jsonic",c:3', {
+        multisource: { path: __dirname, deps },
+      })
+    ).toEqual({ a: 1, b: { d: 2, e: { f: 4 } }, c: 3 })
   })
-
-
 })
-

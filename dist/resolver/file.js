@@ -10,14 +10,14 @@ const multisource_1 = require("../multisource");
 const mem_1 = require("./mem");
 function makeFileResolver() {
     return function FileResolver(spec, popts, _rule, ctx) {
-        let ps = multisource_1.resolvePathSpec(popts, ctx, spec, resolvefolder);
+        let ps = (0, multisource_1.resolvePathSpec)(popts, ctx, spec, resolvefolder);
         let src = undefined;
         // console.log(ps)
         if (null != ps.full) {
             ps.full = path_1.default.resolve(ps.full);
             src = load(ps.full);
             if (null == src && multisource_1.NONE === ps.kind) {
-                let potentials = mem_1.buildPotentials(ps, popts, (...s) => path_1.default.resolve(s.reduce((a, p) => path_1.default.join(a, p))));
+                let potentials = (0, mem_1.buildPotentials)(ps, popts, (...s) => path_1.default.resolve(s.reduce((a, p) => path_1.default.join(a, p))));
                 for (let path of potentials) {
                     if (null != (src = load(path))) {
                         ps.full = path;

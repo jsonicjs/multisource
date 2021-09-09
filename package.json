@@ -1,6 +1,6 @@
 {
   "name": "@jsonic/multisource",
-  "version": "0.0.8",
+  "version": "0.1.0",
   "description": "",
   "main": "dist/multisource.js",
   "type": "commonjs",
@@ -23,13 +23,13 @@
     "test-some": "jest -t",
     "test-watch": "jest --coverage --watchAll",
     "watch": "tsc -w -d",
-    "build": "tsc -d && cp directive.js directive.min.js && browserify -o directive.min.js -e directive.js -s @JsonicDirective -im -i assert -p tinyify",
+    "build": "tsc -d && cp dist/multisource.js dist/multisource.min.js && browserify -o dist/multisource.min.js -e dist/multisource.js -s @JsonicMultiSource -im -i assert -p tinyify",
     "prettier": "prettier --write --no-semi --single-quote **/*.ts",
     "clean": "rm -rf node_modules yarn.lock package-lock.json",
     "reset": "npm run clean && npm i && npm test",
     "repo-tag": "REPO_VERSION=`node -e \"console.log(require('./package').version)\"` && echo TAG: v$REPO_VERSION && git commit -a -m v$REPO_VERSION && git push && git tag v$REPO_VERSION && git push --tags;",
     "repo-publish": "npm run clean && npm i && npm run repo-publish-quick",
-    "repo-publish-quick": "npm run prettier && npm run build && npm run test && npm run test-web && npm run repo-tag && npm publish --registry http://registry.npmjs.org "
+    "repo-publish-quick": "npm run prettier && npm run build && npm run test && npm run repo-tag && npm publish --access public --registry http://registry.npmjs.org "
   },
   "license": "MIT",
   "files": [
@@ -41,11 +41,15 @@
     "dist"
   ],
   "devDependencies": {
-    "@types/jest": "^26.0.24",
-    "jest": "^27.0.6",
-    "prettier": "^2.3.2",
-    "ts-jest": "^27.0.4",
-    "typescript": "^4.3.5",
-    "jsonic": "github:jsonicjs/jsonic#nextgen"
+    "@types/jest": "^27.0.1",
+    "jest": "^27.1.1",
+    "jsonic": "github:jsonicjs/jsonic#nextgen",
+    "prettier": "^2.4.0",
+    "tinyify": "^3.0.0",
+    "ts-jest": "^27.0.5",
+    "typescript": "^4.4.2"
+  },
+  "dependencies": {
+    "@jsonic/directive": "^0.3.0"
   }
 }

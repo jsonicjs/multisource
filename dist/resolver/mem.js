@@ -4,7 +4,7 @@ exports.makeMemResolver = exports.buildPotentials = void 0;
 const multisource_1 = require("../multisource");
 function makeMemResolver(filemap) {
     return function MemResolver(spec, popts, _rule, ctx) {
-        let ps = multisource_1.resolvePathSpec(popts, ctx, spec, makeresolvefolder(filemap));
+        let ps = (0, multisource_1.resolvePathSpec)(popts, ctx, spec, makeresolvefolder(filemap));
         let src = undefined;
         if (null != ps.full) {
             src = filemap[ps.full];
