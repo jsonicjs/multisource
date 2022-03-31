@@ -61,6 +61,11 @@ function makeFileResolver(): Resolver {
 }
 
 function resolvefolder(path: string) {
+  if ('string' !== typeof path) {
+    throw new Error('@jsonic/multisource/resolver/file: ' +
+      'meta parameter multisource.path must be a string')
+  }
+
   let folder = path
   let pathstats = Fs.statSync(path)
 

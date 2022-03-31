@@ -74,6 +74,11 @@ describe('multisource', () => {
     const j = Jsonic.make().use(MultiSource, o)
 
     expect(j('@a')).toEqual({ a: 1, b: { b: 2, c: { c: 3 } }, x: 99 })
+
+    expect(j('@a', {})).toEqual({ a: 1, b: { b: 2, c: { c: 3 } }, x: 99 })
+    expect(j('@a', { x: 1 })).toEqual({ a: 1, b: { b: 2, c: { c: 3 } }, x: 99 })
+    expect(j('@a', { multisource: { path: undefined } }))
+      .toEqual({ a: 1, b: { b: 2, c: { c: 3 } }, x: 99 })
   })
 
   test('error', () => {
@@ -96,6 +101,22 @@ describe('multisource', () => {
       j0('a:1,b:@"./t01.jsonic"', { multisource: { path: __dirname, deps } })
     ).toEqual({ a: 1, b: { c: 2 } })
     // console.dir(deps, { depth: null })
+
+    expect(
+      j0('a:1,b:@"./t01.jsonic"', { multisource: { path: __dirname } })
+    ).toEqual({ a: 1, b: { c: 2 } })
+
+    expect(
+      () => j0('a:1,b:@"./t01.jsonic"', { multisource: {} })
+    ).toThrow('multisource.path must be a string')
+
+    expect(
+      () => j0('a:1,b:@"./t01.jsonic"', {})
+    ).toThrow('multisource.path must be a string')
+
+    expect(
+      () => j0('a:1,b:@"./t01.jsonic"')
+    ).toThrow('multisource.path must be a string')
 
     deps = {}
     expect(

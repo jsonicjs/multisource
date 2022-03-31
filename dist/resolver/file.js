@@ -37,6 +37,10 @@ function makeFileResolver() {
 }
 exports.makeFileResolver = makeFileResolver;
 function resolvefolder(path) {
+    if ('string' !== typeof path) {
+        throw new Error('@jsonic/multisource/resolver/file: ' +
+            'meta parameter multisource.path must be a string');
+    }
     let folder = path;
     let pathstats = fs_1.default.statSync(path);
     if (pathstats.isFile()) {
