@@ -17,7 +17,9 @@ import {
 } from './mem'
 
 
-function makeFileResolver(): Resolver {
+type PathFinder = (spec: any) => string
+
+function makeFileResolver(pathfinder?: PathFinder): Resolver {
 
   return function FileResolver(
     spec: any,
@@ -25,10 +27,10 @@ function makeFileResolver(): Resolver {
     _rule: Rule,
     ctx: Context,
   ): Resolution {
-    let ps = resolvePathSpec(popts, ctx, spec, resolvefolder)
-    let src = undefined
+    let foundSpec = pathfinder ? pathfinder(spec) : spec
 
-    // console.log(ps)
+    let ps = resolvePathSpec(popts, ctx, foundSpec, resolvefolder)
+    let src = undefined
 
     if (null != ps.full) {
       ps.full = Path.resolve(ps.full)
@@ -62,8 +64,7 @@ function makeFileResolver(): Resolver {
 
 function resolvefolder(path: string) {
   if ('string' !== typeof path) {
-    throw new Error('@jsonic/multisource/resolver/file: ' +
-      'meta parameter multisource.path must be a string')
+    return path
   }
 
   let folder = path
@@ -80,7 +81,6 @@ function resolvefolder(path: string) {
 
 // TODO: in multisource.ts, generate an error token if cannot resolve
 function load(path: string) {
-  // console.log('LOAD', path)
   try {
     return Fs.readFileSync(path).toString()
   }

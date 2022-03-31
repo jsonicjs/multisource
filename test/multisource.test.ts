@@ -108,15 +108,15 @@ describe('multisource', () => {
 
     expect(
       () => j0('a:1,b:@"./t01.jsonic"', { multisource: {} })
-    ).toThrow('multisource.path must be a string')
+    ).toThrow('not found')
 
     expect(
       () => j0('a:1,b:@"./t01.jsonic"', {})
-    ).toThrow('multisource.path must be a string')
+    ).toThrow('not found')
 
     expect(
       () => j0('a:1,b:@"./t01.jsonic"')
-    ).toThrow('multisource.path must be a string')
+    ).toThrow('not found')
 
     deps = {}
     expect(

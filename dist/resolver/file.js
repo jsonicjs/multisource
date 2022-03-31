@@ -8,11 +8,11 @@ const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const multisource_1 = require("../multisource");
 const mem_1 = require("./mem");
-function makeFileResolver() {
+function makeFileResolver(pathfinder) {
     return function FileResolver(spec, popts, _rule, ctx) {
-        let ps = (0, multisource_1.resolvePathSpec)(popts, ctx, spec, resolvefolder);
+        let foundSpec = pathfinder ? pathfinder(spec) : spec;
+        let ps = (0, multisource_1.resolvePathSpec)(popts, ctx, foundSpec, resolvefolder);
         let src = undefined;
-        // console.log(ps)
         if (null != ps.full) {
             ps.full = path_1.default.resolve(ps.full);
             src = load(ps.full);
@@ -38,8 +38,7 @@ function makeFileResolver() {
 exports.makeFileResolver = makeFileResolver;
 function resolvefolder(path) {
     if ('string' !== typeof path) {
-        throw new Error('@jsonic/multisource/resolver/file: ' +
-            'meta parameter multisource.path must be a string');
+        return path;
     }
     let folder = path;
     let pathstats = fs_1.default.statSync(path);
@@ -51,7 +50,6 @@ function resolvefolder(path) {
 }
 // TODO: in multisource.ts, generate an error token if cannot resolve
 function load(path) {
-    // console.log('LOAD', path)
     try {
         return fs_1.default.readFileSync(path).toString();
     }

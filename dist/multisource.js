@@ -26,7 +26,9 @@ const MultiSource = (jsonic, popts) => {
             multisource_not_found: 'source not found: $path',
         },
         hint: {
-            multisource_not_found: 'TODO: PATH: $path DETAILS: $details',
+            // TODO: use $details for more explanation in error message.
+            // In particular to show resolved absolute path.
+            multisource_not_found: 'The source path $path was not found.'
         },
     });
     // Define a directive that can load content from multiple sources.
@@ -96,7 +98,6 @@ function resolvePathSpec(popts, ctx, spec, resolvefolder) {
         abs,
         found: false,
     };
-    // console.log('RES', res)
     return res;
 }
 exports.resolvePathSpec = resolvePathSpec;
