@@ -28,7 +28,7 @@ const MultiSource = (jsonic, popts) => {
         hint: {
             // TODO: use $details for more explanation in error message.
             // In particular to show resolved absolute path.
-            multisource_not_found: 'The source path $path was not found.'
+            multisource_not_found: 'The source path $path was not found.',
         },
     });
     // Define a directive that can load content from multiple sources.

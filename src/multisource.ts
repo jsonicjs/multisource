@@ -95,7 +95,7 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
     hint: {
       // TODO: use $details for more explanation in error message.
       // In particular to show resolved absolute path.
-      multisource_not_found: 'The source path $path was not found.'
+      multisource_not_found: 'The source path $path was not found.',
     },
   })
 
@@ -165,17 +165,17 @@ function resolvePathSpec(
     'string' === typeof spec
       ? spec
       : null != spec.path
-        ? '' + spec.path
-        : undefined
+      ? '' + spec.path
+      : undefined
 
   let abs = !!(path?.startsWith('/') || path?.startsWith('\\'))
   let full = abs
     ? path
     : null != path && '' != path
-      ? null != base && '' != base
-        ? base + '/' + path
-        : path
-      : undefined
+    ? null != base && '' != base
+      ? base + '/' + path
+      : path
+    : undefined
 
   let kind = null == full ? NONE : (full.match(/\.([^.]*)$/) || [NONE, NONE])[1]
 

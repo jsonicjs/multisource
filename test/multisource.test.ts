@@ -77,8 +77,11 @@ describe('multisource', () => {
 
     expect(j('@a', {})).toEqual({ a: 1, b: { b: 2, c: { c: 3 } }, x: 99 })
     expect(j('@a', { x: 1 })).toEqual({ a: 1, b: { b: 2, c: { c: 3 } }, x: 99 })
-    expect(j('@a', { multisource: { path: undefined } }))
-      .toEqual({ a: 1, b: { b: 2, c: { c: 3 } }, x: 99 })
+    expect(j('@a', { multisource: { path: undefined } })).toEqual({
+      a: 1,
+      b: { b: 2, c: { c: 3 } },
+      x: 99,
+    })
   })
 
   test('error', () => {
@@ -106,17 +109,13 @@ describe('multisource', () => {
       j0('a:1,b:@"./t01.jsonic"', { multisource: { path: __dirname } })
     ).toEqual({ a: 1, b: { c: 2 } })
 
-    expect(
-      () => j0('a:1,b:@"./t01.jsonic"', { multisource: {} })
-    ).toThrow('not found')
+    expect(() => j0('a:1,b:@"./t01.jsonic"', { multisource: {} })).toThrow(
+      'not found'
+    )
 
-    expect(
-      () => j0('a:1,b:@"./t01.jsonic"', {})
-    ).toThrow('not found')
+    expect(() => j0('a:1,b:@"./t01.jsonic"', {})).toThrow('not found')
 
-    expect(
-      () => j0('a:1,b:@"./t01.jsonic"')
-    ).toThrow('not found')
+    expect(() => j0('a:1,b:@"./t01.jsonic"')).toThrow('not found')
 
     deps = {}
     expect(
