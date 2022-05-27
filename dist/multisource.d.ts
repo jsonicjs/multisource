@@ -1,4 +1,4 @@
-import { Jsonic, Context, Rule, Plugin } from 'jsonic';
+import { Jsonic, Context, Rule, Plugin } from '@jsonic/jsonic-next';
 interface MultiSourceMeta {
     path?: string;
     deps?: DependencyMap;

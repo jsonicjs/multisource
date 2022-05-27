@@ -1,6 +1,6 @@
 /* Copyright (c) 2021 Richard Rodger, MIT License */
 
-import { Jsonic, Context, Rule, Plugin } from 'jsonic'
+import { Jsonic, Context, Rule, Plugin } from '@jsonic/jsonic-next'
 import { Directive, DirectiveOptions } from '@jsonic/directive'
 
 import { makeJsonicProcessor } from './processor/jsonic'

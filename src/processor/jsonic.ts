@@ -1,7 +1,7 @@
 /* Copyright (c) 2021 Richard Rodger, MIT License */
 
 
-import { Jsonic, Rule, Context } from 'jsonic'
+import { Jsonic, Rule, Context } from '@jsonic/jsonic-next'
 
 import {
   MultiSourceOptions,
