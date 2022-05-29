@@ -103,7 +103,7 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
   let dopts: DirectiveOptions = {
     name: 'multisource',
     open: markchar,
-    action: (rule: Rule, ctx: Context) => {
+    action: function multisourceStateAction(rule: Rule, ctx: Context) {
       let spec = rule.child.node
 
       let res = resolver(spec, popts, rule, ctx, jsonic)
@@ -117,6 +117,8 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
       proc(res, popts, rule, ctx, jsonic)
 
       rule.node = res.val
+
+      return undefined
     },
   }
   jsonic.use(Directive, dopts)

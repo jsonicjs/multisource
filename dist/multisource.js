@@ -35,7 +35,7 @@ const MultiSource = (jsonic, popts) => {
     let dopts = {
         name: 'multisource',
         open: markchar,
-        action: (rule, ctx) => {
+        action: function multisourceStateAction(rule, ctx) {
             var _a;
             let spec = rule.child.node;
             let res = resolver(spec, popts, rule, ctx, jsonic);
@@ -46,6 +46,7 @@ const MultiSource = (jsonic, popts) => {
             let proc = processor[res.kind] || processor[NONE];
             proc(res, popts, rule, ctx, jsonic);
             rule.node = res.val;
+            return undefined;
         },
     };
     jsonic.use(directive_1.Directive, dopts);
