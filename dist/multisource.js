@@ -15,6 +15,7 @@ const MultiSource = (jsonic, popts) => {
     const markchar = popts.markchar;
     const resolver = popts.resolver;
     const processor = popts.processor;
+    const { deep } = jsonic.util;
     // Normalize implicit extensions to format `.name`.
     const implictExt = (popts.implictExt || []);
     for (let extI = 0; extI < implictExt.length; extI++) {
@@ -35,9 +36,14 @@ const MultiSource = (jsonic, popts) => {
     let dopts = {
         name: 'multisource',
         open: markchar,
+        rules: {
+            open: 'val,pair'
+        },
         action: function multisourceStateAction(rule, ctx) {
             var _a;
+            let from = rule.parent.name;
             let spec = rule.child.node;
+            // console.log('SRC', from, spec)
             let res = resolver(spec, popts, rule, ctx, jsonic);
             if (!res.found) {
                 return (_a = rule.parent) === null || _a === void 0 ? void 0 : _a.o0.bad('multisource_not_found', { ...res });
@@ -45,9 +51,45 @@ const MultiSource = (jsonic, popts) => {
             res.kind = null == res.kind ? NONE : res.kind;
             let proc = processor[res.kind] || processor[NONE];
             proc(res, popts, rule, ctx, jsonic);
-            rule.node = res.val;
+            if ('pair' === from) {
+                if (ctx.cfg.map.merge) {
+                    rule.parent.node = ctx.cfg.map.merge(rule.parent.node, res.val, rule, ctx);
+                }
+                else if (ctx.cfg.map.extend) {
+                    rule.parent.node = deep(rule.parent.node, res.val);
+                }
+                else {
+                    Object.assign(rule.parent.node, res.val);
+                }
+            }
+            else {
+                rule.node = res.val;
+            }
+            // rule.node = res.val
             return undefined;
         },
+        custom: (jsonic, { OPEN, name }) => {
+            // Handle special case of @foo first token - assume a map
+            jsonic
+                .rule('val', (rs) => {
+                rs.open({
+                    s: [OPEN],
+                    c: (r) => 0 === r.d,
+                    p: 'map',
+                    b: 1,
+                    n: { [name + '_top']: 1 }
+                });
+            });
+            jsonic
+                .rule('map', (rs) => {
+                rs.open({
+                    s: [OPEN],
+                    c: (r) => (1 === r.d && 1 === r.n[name + '_top']),
+                    p: 'pair',
+                    b: 1,
+                });
+            });
+        }
     };
     jsonic.use(directive_1.Directive, dopts);
 };

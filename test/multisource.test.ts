@@ -63,6 +63,46 @@ describe('multisource', () => {
     })
   })
 
+
+  test('implicit', () => {
+    const o: MultiSourceOptions = {
+      resolver: makeMemResolver({
+        'a.jsonic': 'a:1',
+        'b.jsonic': 'a:{b:1,c:2}',
+      }),
+    }
+    const j = Jsonic.make().use(MultiSource, o)
+
+    expect(j('a:@a.jsonic,x:1')).toEqual({ a: { a: 1 }, x: 1 })
+    expect(j('[@a.jsonic,{x:1}]')).toEqual([{ a: 1 }, { x: 1 }])
+
+    expect(j('@a.jsonic')).toEqual({ a: 1 })
+    expect(j('b:2 @a.jsonic')).toEqual({ b: 2, a: 1 })
+    expect(j('b:2 @a.jsonic c:3')).toEqual({ b: 2, a: 1, c: 3 })
+    expect(j('@a.jsonic b:2')).toEqual({ a: 1, b: 2 })
+
+    expect(j('y:@b.jsonic,x:1')).toEqual({ y: { a: { b: 1, c: 2 } }, x: 1 })
+    expect(j('@b.jsonic')).toEqual({ a: { b: 1, c: 2 } })
+    expect(j('x:2 @b.jsonic')).toEqual({ x: 2, a: { b: 1, c: 2 } })
+    expect(j('x:2 @b.jsonic y:3')).toEqual({ x: 2, a: { b: 1, c: 2 }, y: 3 })
+    expect(j('@b.jsonic y:2')).toEqual({ a: { b: 1, c: 2 }, y: 2 })
+
+    expect(j('a:{d:3} @b.jsonic')).toEqual({ a: { b: 1, c: 2, d: 3 } })
+    expect(j('a:{d:3} @b.jsonic y:2')).toEqual({ a: { b: 1, c: 2, d: 3 }, y: 2 })
+
+    expect(j('a:{d:3} @b.jsonic a:{d:4,f:5}'))
+      .toEqual({ a: { b: 1, c: 2, d: 4, f: 5 } })
+    expect(j('@b.jsonic a:{d:4,f:5}'))
+      .toEqual({ a: { b: 1, c: 2, d: 4, f: 5 } })
+
+    expect(j('a:{d:3} @b.jsonic a:{d:4,f:5} z:1'))
+      .toEqual({ a: { b: 1, c: 2, d: 4, f: 5 }, z: 1 })
+    expect(j('@b.jsonic a:{d:4,f:5} z:1'))
+      .toEqual({ a: { b: 1, c: 2, d: 4, f: 5 }, z: 1 })
+
+  })
+
+
   test('deps', () => {
     const o: MultiSourceOptions = {
       resolver: makeMemResolver({
@@ -84,6 +124,7 @@ describe('multisource', () => {
     })
   })
 
+
   test('error', () => {
     const o: MultiSourceOptions = {
       resolver: makeMemResolver({}),
@@ -93,6 +134,7 @@ describe('multisource', () => {
     // j('x:@a')
     expect(() => j('x:@a')).toThrow(/multisource_not_found.*:1:3/s)
   })
+
 
   it('file', () => {
     let j0 = Jsonic.make().use(MultiSource, {

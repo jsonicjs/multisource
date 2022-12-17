@@ -81,6 +81,8 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
   const resolver = popts.resolver as Resolver
   const processor = popts.processor as { [kind: string]: Processor }
 
+  const { deep } = jsonic.util
+
   // Normalize implicit extensions to format `.name`.
   const implictExt = (popts.implictExt || []) as string[]
   for (let extI = 0; extI < implictExt.length; extI++) {
@@ -103,8 +105,13 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
   let dopts: DirectiveOptions = {
     name: 'multisource',
     open: markchar,
+    rules: {
+      open: 'val,pair'
+    },
     action: function multisourceStateAction(rule: Rule, ctx: Context) {
+      let from = rule.parent.name
       let spec = rule.child.node
+      // console.log('SRC', from, spec)
 
       let res = resolver(spec, popts, rule, ctx, jsonic)
       if (!res.found) {
@@ -116,10 +123,51 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
       let proc = processor[res.kind] || processor[NONE]
       proc(res, popts, rule, ctx, jsonic)
 
-      rule.node = res.val
+      if ('pair' === from) {
+        if (ctx.cfg.map.merge) {
+          rule.parent.node = ctx.cfg.map.merge(rule.parent.node, res.val, rule, ctx)
+        }
+        else if (ctx.cfg.map.extend) {
+          rule.parent.node = deep(rule.parent.node, res.val)
+        }
+        else {
+          Object.assign(rule.parent.node, res.val)
+        }
+
+      }
+      else {
+        rule.node = res.val
+      }
+
+      // rule.node = res.val
 
       return undefined
     },
+    custom: (jsonic: Jsonic, { OPEN, name }: any) => {
+
+      // Handle special case of @foo first token - assume a map
+      jsonic
+        .rule('val', (rs) => {
+          rs.open({
+            s: [OPEN],
+            c: (r) => 0 === r.d,
+            p: 'map',
+            b: 1,
+            n: { [name + '_top']: 1 }
+          })
+        })
+
+      jsonic
+        .rule('map', (rs) => {
+          rs.open({
+            s: [OPEN],
+            c: (r) => (1 === r.d && 1 === r.n[name + '_top']),
+            p: 'pair',
+            b: 1,
+          })
+        })
+    }
+
   }
   jsonic.use(Directive, dopts)
 }
@@ -167,17 +215,17 @@ function resolvePathSpec(
     'string' === typeof spec
       ? spec
       : null != spec.path
-      ? '' + spec.path
-      : undefined
+        ? '' + spec.path
+        : undefined
 
   let abs = !!(path?.startsWith('/') || path?.startsWith('\\'))
   let full = abs
     ? path
     : null != path && '' != path
-    ? null != base && '' != base
-      ? base + '/' + path
-      : path
-    : undefined
+      ? null != base && '' != base
+        ? base + '/' + path
+        : path
+      : undefined
 
   let kind = null == full ? NONE : (full.match(/\.([^.]*)$/) || [NONE, NONE])[1]
 
