@@ -123,12 +123,14 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
       let proc = processor[res.kind] || processor[NONE]
       proc(res, popts, rule, ctx, jsonic)
 
+      // Handle the {@foo} case, injecting keys into parent map.
       if ('pair' === from) {
         if (ctx.cfg.map.merge) {
-          rule.parent.node = ctx.cfg.map.merge(rule.parent.node, res.val, rule, ctx)
+          rule.parent.parent.node =
+            ctx.cfg.map.merge(rule.parent.parent.node, res.val, rule, ctx)
         }
         else if (ctx.cfg.map.extend) {
-          rule.parent.node = deep(rule.parent.node, res.val)
+          rule.parent.parent.node = deep(rule.parent.parent.node, res.val)
         }
         else {
           Object.assign(rule.parent.node, res.val)
