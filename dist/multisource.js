@@ -37,7 +37,7 @@ const MultiSource = (jsonic, popts) => {
         name: 'multisource',
         open: markchar,
         rules: {
-            open: 'val,pair'
+            open: 'val,pair',
         },
         action: function multisourceStateAction(rule, ctx) {
             var _a;
@@ -54,8 +54,7 @@ const MultiSource = (jsonic, popts) => {
             // Handle the {@foo} case, injecting keys into parent map.
             if ('pair' === from) {
                 if (ctx.cfg.map.merge) {
-                    rule.parent.parent.node =
-                        ctx.cfg.map.merge(rule.parent.parent.node, res.val, rule, ctx);
+                    rule.parent.parent.node = ctx.cfg.map.merge(rule.parent.parent.node, res.val, rule, ctx);
                 }
                 else if (ctx.cfg.map.extend) {
                     rule.parent.parent.node = deep(rule.parent.parent.node, res.val);
@@ -72,26 +71,24 @@ const MultiSource = (jsonic, popts) => {
         },
         custom: (jsonic, { OPEN, name }) => {
             // Handle special case of @foo first token - assume a map
-            jsonic
-                .rule('val', (rs) => {
+            jsonic.rule('val', (rs) => {
                 rs.open({
                     s: [OPEN],
                     c: (r) => 0 === r.d,
                     p: 'map',
                     b: 1,
-                    n: { [name + '_top']: 1 }
+                    n: { [name + '_top']: 1 },
                 });
             });
-            jsonic
-                .rule('map', (rs) => {
+            jsonic.rule('map', (rs) => {
                 rs.open({
                     s: [OPEN],
-                    c: (r) => (1 === r.d && 1 === r.n[name + '_top']),
+                    c: (r) => 1 === r.d && 1 === r.n[name + '_top'],
                     p: 'pair',
                     b: 1,
                 });
             });
-        }
+        },
     };
     jsonic.use(directive_1.Directive, dopts);
 };

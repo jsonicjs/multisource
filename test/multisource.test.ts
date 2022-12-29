@@ -63,7 +63,6 @@ describe('multisource', () => {
     })
   })
 
-
   test('implicit', () => {
     const o: MultiSourceOptions = {
       resolver: makeMemResolver({
@@ -88,20 +87,27 @@ describe('multisource', () => {
     expect(j('@b.jsonic y:2')).toEqual({ a: { b: 1, c: 2 }, y: 2 })
 
     expect(j('a:{d:3} @b.jsonic')).toEqual({ a: { b: 1, c: 2, d: 3 } })
-    expect(j('a:{d:3} @b.jsonic y:2')).toEqual({ a: { b: 1, c: 2, d: 3 }, y: 2 })
+    expect(j('a:{d:3} @b.jsonic y:2')).toEqual({
+      a: { b: 1, c: 2, d: 3 },
+      y: 2,
+    })
 
-    expect(j('a:{d:3} @b.jsonic a:{d:4,f:5}'))
-      .toEqual({ a: { b: 1, c: 2, d: 4, f: 5 } })
-    expect(j('@b.jsonic a:{d:4,f:5}'))
-      .toEqual({ a: { b: 1, c: 2, d: 4, f: 5 } })
+    expect(j('a:{d:3} @b.jsonic a:{d:4,f:5}')).toEqual({
+      a: { b: 1, c: 2, d: 4, f: 5 },
+    })
+    expect(j('@b.jsonic a:{d:4,f:5}')).toEqual({
+      a: { b: 1, c: 2, d: 4, f: 5 },
+    })
 
-    expect(j('a:{d:3} @b.jsonic a:{d:4,f:5} z:1'))
-      .toEqual({ a: { b: 1, c: 2, d: 4, f: 5 }, z: 1 })
-    expect(j('@b.jsonic a:{d:4,f:5} z:1'))
-      .toEqual({ a: { b: 1, c: 2, d: 4, f: 5 }, z: 1 })
-
+    expect(j('a:{d:3} @b.jsonic a:{d:4,f:5} z:1')).toEqual({
+      a: { b: 1, c: 2, d: 4, f: 5 },
+      z: 1,
+    })
+    expect(j('@b.jsonic a:{d:4,f:5} z:1')).toEqual({
+      a: { b: 1, c: 2, d: 4, f: 5 },
+      z: 1,
+    })
   })
-
 
   test('deps', () => {
     const o: MultiSourceOptions = {
@@ -124,7 +130,6 @@ describe('multisource', () => {
     })
   })
 
-
   test('error', () => {
     const o: MultiSourceOptions = {
       resolver: makeMemResolver({}),
@@ -134,7 +139,6 @@ describe('multisource', () => {
     // j('x:@a')
     expect(() => j('x:@a')).toThrow(/multisource_not_found.*:1:3/s)
   })
-
 
   it('file', () => {
     let j0 = Jsonic.make().use(MultiSource, {

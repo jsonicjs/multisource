@@ -106,7 +106,7 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
     name: 'multisource',
     open: markchar,
     rules: {
-      open: 'val,pair'
+      open: 'val,pair',
     },
     action: function multisourceStateAction(rule: Rule, ctx: Context) {
       let from = rule.parent.name
@@ -126,18 +126,18 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
       // Handle the {@foo} case, injecting keys into parent map.
       if ('pair' === from) {
         if (ctx.cfg.map.merge) {
-          rule.parent.parent.node =
-            ctx.cfg.map.merge(rule.parent.parent.node, res.val, rule, ctx)
-        }
-        else if (ctx.cfg.map.extend) {
+          rule.parent.parent.node = ctx.cfg.map.merge(
+            rule.parent.parent.node,
+            res.val,
+            rule,
+            ctx
+          )
+        } else if (ctx.cfg.map.extend) {
           rule.parent.parent.node = deep(rule.parent.parent.node, res.val)
-        }
-        else {
+        } else {
           Object.assign(rule.parent.node, res.val)
         }
-
-      }
-      else {
+      } else {
         rule.node = res.val
       }
 
@@ -146,30 +146,26 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
       return undefined
     },
     custom: (jsonic: Jsonic, { OPEN, name }: any) => {
-
       // Handle special case of @foo first token - assume a map
-      jsonic
-        .rule('val', (rs) => {
-          rs.open({
-            s: [OPEN],
-            c: (r) => 0 === r.d,
-            p: 'map',
-            b: 1,
-            n: { [name + '_top']: 1 }
-          })
+      jsonic.rule('val', (rs) => {
+        rs.open({
+          s: [OPEN],
+          c: (r) => 0 === r.d,
+          p: 'map',
+          b: 1,
+          n: { [name + '_top']: 1 },
         })
+      })
 
-      jsonic
-        .rule('map', (rs) => {
-          rs.open({
-            s: [OPEN],
-            c: (r) => (1 === r.d && 1 === r.n[name + '_top']),
-            p: 'pair',
-            b: 1,
-          })
+      jsonic.rule('map', (rs) => {
+        rs.open({
+          s: [OPEN],
+          c: (r) => 1 === r.d && 1 === r.n[name + '_top'],
+          p: 'pair',
+          b: 1,
         })
-    }
-
+      })
+    },
   }
   jsonic.use(Directive, dopts)
 }
@@ -217,17 +213,17 @@ function resolvePathSpec(
     'string' === typeof spec
       ? spec
       : null != spec.path
-        ? '' + spec.path
-        : undefined
+      ? '' + spec.path
+      : undefined
 
   let abs = !!(path?.startsWith('/') || path?.startsWith('\\'))
   let full = abs
     ? path
     : null != path && '' != path
-      ? null != base && '' != base
-        ? base + '/' + path
-        : path
-      : undefined
+    ? null != base && '' != base
+      ? base + '/' + path
+      : path
+    : undefined
 
   let kind = null == full ? NONE : (full.match(/\.([^.]*)$/) || [NONE, NONE])[1]
 
