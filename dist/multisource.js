@@ -46,10 +46,9 @@ const MultiSource = (jsonic, popts) => {
             // console.log('SRC', from, spec)
             let res = resolver(spec, popts, rule, ctx, jsonic);
             if (!res.found) {
-                console.log('RES', res);
                 return (_a = rule.parent) === null || _a === void 0 ? void 0 : _a.o0.bad('multisource_not_found', {
                     ...res,
-                    searchstr: ((res === null || res === void 0 ? void 0 : res.search) || [res.full]).join('\n')
+                    searchstr: ((res === null || res === void 0 ? void 0 : res.search) || [res.full]).join('\n'),
                 });
             }
             res.kind = null == res.kind ? NONE : res.kind;
