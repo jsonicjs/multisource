@@ -8,7 +8,7 @@ import {
   Resolver,
   Resolution,
   resolvePathSpec,
-  NONE,
+  // NONE,
 } from '../multisource'
 
 
@@ -17,41 +17,46 @@ import {
 } from './mem'
 
 
-type PathFinder = (spec: any) => string
+function makePkgResolver(options: any): Resolver {
+  const useRequire = options.require || require
 
-function makeFileResolver(pathfinder?: PathFinder): Resolver {
-
-  return function FileResolver(
+  return function PkgResolver(
     spec: any,
     popts: MultiSourceOptions,
     _rule: Rule,
     ctx: Context,
   ): Resolution {
-    let foundSpec = pathfinder ? pathfinder(spec) : spec
+    let foundSpec = spec
 
     let ps = resolvePathSpec(popts, ctx, foundSpec, resolvefolder)
     let src = undefined
-
     let search: string[] = []
 
-    if (null != ps.full) {
-      ps.full = Path.resolve(ps.full)
+    if (null != ps.path) {
+      try {
+        ps.full = useRequire.resolve(ps.path)
+        if (null != ps.full) {
+          src = load(ps.full)
+        }
+      }
+      catch (me: any) {
+        search.push(...(useRequire.resolve.paths(ps.path)
+          .map((p: string) => Path.join(p, (ps.path as string)))))
 
-      search.push(ps.full)
-      src = load(ps.full)
-
-
-      if (null == src && NONE === ps.kind) {
         let potentials =
           buildPotentials(ps, popts, (...s) =>
             Path.resolve(s.reduce((a, p) => Path.join(a, p))))
-        search.push(...potentials)
 
         for (let path of potentials) {
-          if (null != (src = load(path))) {
-            ps.full = path
-            ps.kind = (path.match(/\.([^.]*)$/) || [NONE, NONE])[1]
-            break
+          try {
+            ps.full = useRequire.resolve(path)
+            if (null != ps.full) {
+              src = load(ps.full)
+            }
+          }
+          catch (me: any) {
+            search.push(...(useRequire.resolve.paths(path)
+              .map((p: string) => Path.join(p, (path as string)))))
           }
         }
       }
@@ -67,6 +72,7 @@ function makeFileResolver(pathfinder?: PathFinder): Resolver {
     return res
   }
 }
+
 
 function resolvefolder(path: string) {
   if ('string' !== typeof path) {
@@ -98,5 +104,5 @@ function load(path: string) {
 
 
 export {
-  makeFileResolver,
+  makePkgResolver,
 }

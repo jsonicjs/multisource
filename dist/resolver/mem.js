@@ -45,26 +45,30 @@ function buildPotentials(ps, popts, pathjoin) {
     let full = ps.full;
     let potentials = [];
     let implictExt = popts.implictExt || [];
-    // Implicit extensions.
-    for (let ext of implictExt) {
-        potentials.push(full + ext);
-    }
-    // Folder index file.
-    for (let ext of implictExt) {
-        potentials.push(pathjoin(full, 'index' + ext));
-    }
-    // Folder index file (includes folder name).
-    if (null != ps.path) {
-        let folder = (ps.path
-            .replace(/[\\\/]+$/, '')
-            .match(/[^\\\/]+$/) || [])[0];
-        if (null != folder) {
-            for (let ext of implictExt) {
-                potentials.push(pathjoin(full, 'index.' + folder + ext));
+    let hasExt = full.match(implictExt.join('|') + '$');
+    // TODO: use Jsonic.util.escre
+    if (!hasExt) {
+        // Implicit extensions.
+        for (let ext of implictExt) {
+            potentials.push(full + ext);
+        }
+        // Folder index file.
+        for (let ext of implictExt) {
+            potentials.push(pathjoin(full, 'index' + ext));
+        }
+        // Folder index file (includes folder name).
+        if (null != ps.path) {
+            let folder = (ps.path
+                .replace(/[\\\/]+$/, '')
+                .match(/[^\\\/]+$/) || [])[0];
+            if (null != folder) {
+                for (let ext of implictExt) {
+                    potentials.push(pathjoin(full, 'index.' + folder + ext));
+                }
             }
         }
     }
-    // console.log(potentials)
+    // console.log('POT', potentials)
     return potentials;
 }
 exports.buildPotentials = buildPotentials;

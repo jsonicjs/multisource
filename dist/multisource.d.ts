@@ -24,6 +24,7 @@ type Resolution = PathSpec & {
     src?: string;
     val?: any;
     found: boolean;
+    search?: string[];
 };
 type Resolver = (spec: PathSpec, popts: MultiSourceOptions, rule: Rule, ctx: Context, jsonic: Jsonic) => Resolution;
 type Processor = (res: Resolution, popts: MultiSourceOptions, rule: Rule, ctx: Context, jsonic: Jsonic) => void;

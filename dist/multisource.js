@@ -29,7 +29,7 @@ const MultiSource = (jsonic, popts) => {
         hint: {
             // TODO: use $details for more explanation in error message.
             // In particular to show resolved absolute path.
-            multisource_not_found: 'The source path $path was not found.',
+            multisource_not_found: 'The source path $path was not found.\n\nSearch paths:\n${searchstr}',
         },
     });
     // Define a directive that can load content from multiple sources.
@@ -46,7 +46,11 @@ const MultiSource = (jsonic, popts) => {
             // console.log('SRC', from, spec)
             let res = resolver(spec, popts, rule, ctx, jsonic);
             if (!res.found) {
-                return (_a = rule.parent) === null || _a === void 0 ? void 0 : _a.o0.bad('multisource_not_found', { ...res });
+                console.log('RES', res);
+                return (_a = rule.parent) === null || _a === void 0 ? void 0 : _a.o0.bad('multisource_not_found', {
+                    ...res,
+                    searchstr: ((res === null || res === void 0 ? void 0 : res.search) || [res.full]).join('\n')
+                });
             }
             res.kind = null == res.kind ? NONE : res.kind;
             let proc = processor[res.kind] || processor[NONE];

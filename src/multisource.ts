@@ -40,6 +40,7 @@ type Resolution = PathSpec & {
   src?: string // Undefined if no resolution
   val?: any // Undefined if no resolution
   found: boolean // True if source file was found
+  search?: string[] // List of searched paths.
 }
 
 // Resolve the source.
@@ -97,7 +98,8 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
     hint: {
       // TODO: use $details for more explanation in error message.
       // In particular to show resolved absolute path.
-      multisource_not_found: 'The source path $path was not found.',
+      multisource_not_found:
+        'The source path $path was not found.\n\nSearch paths:\n${searchstr}',
     },
   })
 
@@ -115,7 +117,10 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
 
       let res = resolver(spec, popts, rule, ctx, jsonic)
       if (!res.found) {
-        return rule.parent?.o0.bad('multisource_not_found', { ...res })
+        return rule.parent?.o0.bad('multisource_not_found', {
+          ...res,
+          searchstr: (res?.search || [res.full]).join('\n')
+        })
       }
 
       res.kind = null == res.kind ? NONE : res.kind
@@ -198,6 +203,7 @@ MultiSource.defaults = {
   implictExt: ['jsonic', 'jsc', 'json', 'js'],
 }
 
+
 function resolvePathSpec(
   popts: MultiSourceOptions,
   ctx: Context,
@@ -213,17 +219,17 @@ function resolvePathSpec(
     'string' === typeof spec
       ? spec
       : null != spec.path
-      ? '' + spec.path
-      : undefined
+        ? '' + spec.path
+        : undefined
 
   let abs = !!(path?.startsWith('/') || path?.startsWith('\\'))
   let full = abs
     ? path
     : null != path && '' != path
-    ? null != base && '' != base
-      ? base + '/' + path
-      : path
-    : undefined
+      ? null != base && '' != base
+        ? base + '/' + path
+        : path
+      : undefined
 
   let kind = null == full ? NONE : (full.match(/\.([^.]*)$/) || [NONE, NONE])[1]
 
@@ -238,6 +244,7 @@ function resolvePathSpec(
 
   return res
 }
+
 
 export type {
   Resolver,

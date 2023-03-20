@@ -74,30 +74,34 @@ function buildPotentials(
   let full = (ps.full as string)
   let potentials: string[] = []
   let implictExt: string[] = popts.implictExt || []
+  let hasExt = full.match(implictExt.join('|') + '$')
 
-  // Implicit extensions.
-  for (let ext of implictExt) {
-    potentials.push(full + ext)
-  }
+  // TODO: use Jsonic.util.escre
+  if (!hasExt) {
+    // Implicit extensions.
+    for (let ext of implictExt) {
+      potentials.push(full + ext)
+    }
 
-  // Folder index file.
-  for (let ext of implictExt) {
-    potentials.push(pathjoin(full, 'index' + ext))
-  }
+    // Folder index file.
+    for (let ext of implictExt) {
+      potentials.push(pathjoin(full, 'index' + ext))
+    }
 
-  // Folder index file (includes folder name).
-  if (null != ps.path) {
-    let folder = (ps.path
-      .replace(/[\\\/]+$/, '')
-      .match(/[^\\\/]+$/) || [])[0]
-    if (null != folder) {
-      for (let ext of implictExt) {
-        potentials.push(pathjoin(full, 'index.' + folder + ext))
+    // Folder index file (includes folder name).
+    if (null != ps.path) {
+      let folder = (ps.path
+        .replace(/[\\\/]+$/, '')
+        .match(/[^\\\/]+$/) || [])[0]
+      if (null != folder) {
+        for (let ext of implictExt) {
+          potentials.push(pathjoin(full, 'index.' + folder + ext))
+        }
       }
     }
   }
 
-  // console.log(potentials)
+  // console.log('POT', potentials)
 
   return potentials
 }
