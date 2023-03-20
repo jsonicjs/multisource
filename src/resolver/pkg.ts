@@ -18,7 +18,22 @@ import {
 
 
 function makePkgResolver(options: any): Resolver {
-  const useRequire = options.require || require
+  let useRequire: any = require
+  let requireOptions: any = undefined
+
+  if ('function' === typeof options.require) {
+    useRequire = options.require
+  }
+  else if (Array.isArray(options.require)) {
+    requireOptions = {
+      paths: options.require
+    }
+  }
+  else if ('string' === typeof options.require) {
+    requireOptions = {
+      paths: [options.require]
+    }
+  }
 
   return function PkgResolver(
     spec: any,
@@ -26,6 +41,8 @@ function makePkgResolver(options: any): Resolver {
     _rule: Rule,
     ctx: Context,
   ): Resolution {
+    // TODO: support pathfinder as file.ts
+
     let foundSpec = spec
 
     let ps = resolvePathSpec(popts, ctx, foundSpec, resolvefolder)
@@ -34,14 +51,14 @@ function makePkgResolver(options: any): Resolver {
 
     if (null != ps.path) {
       try {
-        ps.full = useRequire.resolve(ps.path)
+        ps.full = useRequire.resolve(ps.path, requireOptions)
         if (null != ps.full) {
           src = load(ps.full)
         }
       }
       catch (me: any) {
-        search.push(...(useRequire.resolve.paths(ps.path)
-          .map((p: string) => Path.join(p, (ps.path as string)))))
+        search.push(...(requireOptions?.paths || (useRequire.resolve.paths(ps.path)
+          .map((p: string) => Path.join(p, (ps.path as string))))))
 
         let potentials =
           buildPotentials(ps, popts, (...s) =>
@@ -49,14 +66,14 @@ function makePkgResolver(options: any): Resolver {
 
         for (let path of potentials) {
           try {
-            ps.full = useRequire.resolve(path)
+            ps.full = useRequire.resolve(path, requireOptions)
             if (null != ps.full) {
               src = load(ps.full)
             }
           }
           catch (me: any) {
-            search.push(...(useRequire.resolve.paths(path)
-              .map((p: string) => Path.join(p, (path as string)))))
+            search.push(...(requireOptions?.paths || (useRequire.resolve.paths(path)
+              .map((p: string) => Path.join(p, (path as string))))))
           }
         }
       }

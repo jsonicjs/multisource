@@ -20,6 +20,8 @@ function makeMemResolver(filemap: { [fullpath: string]: string }): Resolver {
     _rule: Rule,
     ctx: Context,
   ): Resolution {
+    // TODO: support pathfinder as file.ts
+
     let ps = resolvePathSpec(popts, ctx, spec, makeresolvefolder(filemap))
     let src = undefined
 

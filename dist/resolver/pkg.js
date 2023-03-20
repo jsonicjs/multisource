@@ -9,33 +9,48 @@ const path_1 = __importDefault(require("path"));
 const multisource_1 = require("../multisource");
 const mem_1 = require("./mem");
 function makePkgResolver(options) {
-    const useRequire = options.require || require;
+    let useRequire = require;
+    let requireOptions = undefined;
+    if ('function' === typeof options.require) {
+        useRequire = options.require;
+    }
+    else if (Array.isArray(options.require)) {
+        requireOptions = {
+            paths: options.require
+        };
+    }
+    else if ('string' === typeof options.require) {
+        requireOptions = {
+            paths: [options.require]
+        };
+    }
     return function PkgResolver(spec, popts, _rule, ctx) {
+        // TODO: support pathfinder as file.ts
         let foundSpec = spec;
         let ps = (0, multisource_1.resolvePathSpec)(popts, ctx, foundSpec, resolvefolder);
         let src = undefined;
         let search = [];
         if (null != ps.path) {
             try {
-                ps.full = useRequire.resolve(ps.path);
+                ps.full = useRequire.resolve(ps.path, requireOptions);
                 if (null != ps.full) {
                     src = load(ps.full);
                 }
             }
             catch (me) {
-                search.push(...(useRequire.resolve.paths(ps.path)
-                    .map((p) => path_1.default.join(p, ps.path))));
+                search.push(...((requireOptions === null || requireOptions === void 0 ? void 0 : requireOptions.paths) || (useRequire.resolve.paths(ps.path)
+                    .map((p) => path_1.default.join(p, ps.path)))));
                 let potentials = (0, mem_1.buildPotentials)(ps, popts, (...s) => path_1.default.resolve(s.reduce((a, p) => path_1.default.join(a, p))));
                 for (let path of potentials) {
                     try {
-                        ps.full = useRequire.resolve(path);
+                        ps.full = useRequire.resolve(path, requireOptions);
                         if (null != ps.full) {
                             src = load(ps.full);
                         }
                     }
                     catch (me) {
-                        search.push(...(useRequire.resolve.paths(path)
-                            .map((p) => path_1.default.join(p, path))));
+                        search.push(...((requireOptions === null || requireOptions === void 0 ? void 0 : requireOptions.paths) || (useRequire.resolve.paths(path)
+                            .map((p) => path_1.default.join(p, path)))));
                     }
                 }
             }
