@@ -1,6 +1,7 @@
 import { Jsonic, Context, Rule, Plugin } from '@jsonic/jsonic-next';
 interface MultiSourceMeta {
     path?: string;
+    parents?: string[];
     deps?: DependencyMap;
 }
 declare const NONE = "";

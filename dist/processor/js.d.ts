@@ -1,5 +1,3 @@
 import { Processor } from '../multisource';
-declare function makeJavaScriptProcessor(opts?: {
-    evalOnly?: boolean;
-}): Processor;
+declare function makeJavaScriptProcessor(opts?: {}): Processor;
 export { makeJavaScriptProcessor };

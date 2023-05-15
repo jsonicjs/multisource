@@ -2,6 +2,7 @@
 /* Copyright (c) 2021 Richard Rodger, MIT License */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TOP = exports.NONE = exports.resolvePathSpec = exports.MultiSource = void 0;
+const jsonic_next_1 = require("@jsonic/jsonic-next");
 const directive_1 = require("@jsonic/directive");
 const jsonic_1 = require("./processor/jsonic");
 const js_1 = require("./processor/js");
@@ -40,7 +41,7 @@ const MultiSource = (jsonic, popts) => {
             open: 'val,pair',
         },
         action: function multisourceStateAction(rule, ctx) {
-            var _a;
+            var _a, _b;
             let from = rule.parent.name;
             let spec = rule.child.node;
             // console.log('SRC', from, spec)
@@ -51,7 +52,40 @@ const MultiSource = (jsonic, popts) => {
                     searchstr: ((res === null || res === void 0 ? void 0 : res.search) || [res.full]).join('\n'),
                 });
             }
+            let fullpath = null != res.full ? res.full :
+                null != res.path ? res.path :
+                    'no-path';
             res.kind = null == res.kind ? NONE : res.kind;
+            // Pass down any meta info.
+            let msmeta = ((_b = ctx.meta) === null || _b === void 0 ? void 0 : _b.multisource) || {};
+            let parents = (msmeta.parents || []);
+            if (null != msmeta.path) {
+                parents.push(msmeta.path);
+            }
+            let meta = {
+                ...(ctx.meta || {}),
+                fileName: res.path,
+                multisource: {
+                    ...msmeta,
+                    parents,
+                    path: res.full
+                }
+            };
+            // Build dependency tree branch.
+            if (msmeta.deps) {
+                let depmap = msmeta.deps;
+                let parent = (msmeta.path || TOP);
+                if (null != parent) {
+                    let dep = {
+                        tar: parent,
+                        src: fullpath,
+                        wen: Date.now()
+                    };
+                    depmap[parent] = depmap[parent] || {};
+                    depmap[parent][fullpath] = dep;
+                }
+            }
+            ctx.meta = meta;
             let proc = processor[res.kind] || processor[NONE];
             proc(res, popts, rule, ctx, jsonic);
             // Handle the {@foo} case, injecting keys into parent map.
@@ -102,8 +136,11 @@ function makeProcessor(process) {
 }
 // Default is just to insert file contents as a string.
 const defaultProcessor = makeProcessor((src) => src);
+const jsonicJsonParser = jsonic_next_1.Jsonic.make('json');
 // TODO: use json plugin to get better error msgs.
-const jsonProcessor = makeProcessor((src) => null == src ? undefined : JSON.parse(src));
+const jsonProcessor = makeProcessor((src, res) => 
+// null == src ? undefined : JSON.parse(src)
+null == src ? undefined : jsonicJsonParser(src, { fileName: res.path }));
 const jsonicProcessor = (0, jsonic_1.makeJsonicProcessor)();
 const jsProcessor = (0, js_1.makeJavaScriptProcessor)();
 MultiSource.defaults = {

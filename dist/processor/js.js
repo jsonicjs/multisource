@@ -11,17 +11,18 @@ function makeJavaScriptProcessor(opts) {
 }
 exports.makeJavaScriptProcessor = makeJavaScriptProcessor;
 // TODO: too simplistic - handle more module cases
-function evaluate(res, opts) {
+function evaluate(res, _opts) {
     let out = undefined;
-    if (true !== (opts === null || opts === void 0 ? void 0 : opts.evalOnly) && undefined !== typeof (require)) {
-        out = require(res.full);
-    }
-    else {
-        let exports = null;
-        let module = { exports };
-        eval(res.src);
-        out = module.exports;
-    }
+    // if (true !== opts?.evalOnly && undefined !== typeof (require)) {
+    out = require(res.full);
+    out = null != out.default ? out.default : out;
+    // }
+    // else {
+    //   let exports = null
+    //   let module = { exports }
+    //   eval((res.src as string))
+    //   out = module.exports
+    // }
     return out;
 }
 //# sourceMappingURL=js.js.map

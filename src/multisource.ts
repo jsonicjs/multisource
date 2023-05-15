@@ -11,6 +11,7 @@ import { makeJavaScriptProcessor } from './processor/js'
 // Jsonic parsing meta data. In this case, storing the dependency tree.
 interface MultiSourceMeta {
   path?: string // Base path for this parse run.
+  parents?: string[] // Parent source paths.
   deps?: DependencyMap // Provide an empty object to be filled.
 }
 
@@ -123,7 +124,46 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
         })
       }
 
+      let fullpath =
+        null != res.full ? res.full :
+          null != res.path ? res.path :
+            'no-path'
+
       res.kind = null == res.kind ? NONE : res.kind
+
+      // Pass down any meta info.
+      let msmeta: MultiSourceMeta = ctx.meta?.multisource || {}
+      let parents = (msmeta.parents || [])
+      if (null != msmeta.path) {
+        parents.push(msmeta.path)
+      }
+
+      let meta = {
+        ...(ctx.meta || {}),
+        fileName: res.path,
+        multisource: {
+          ...msmeta,
+          parents,
+          path: res.full
+        }
+      }
+
+      // Build dependency tree branch.
+      if (msmeta.deps) {
+        let depmap = (msmeta.deps as DependencyMap)
+        let parent = (msmeta.path || TOP) as string
+        if (null != parent) {
+          let dep: Dependency = {
+            tar: parent,
+            src: fullpath,
+            wen: Date.now()
+          }
+          depmap[parent] = depmap[parent] || {}
+          depmap[parent][fullpath] = dep
+        }
+      }
+
+      ctx.meta = meta
 
       let proc = processor[res.kind] || processor[NONE]
       proc(res, popts, rule, ctx, jsonic)
@@ -183,9 +223,13 @@ function makeProcessor(process: (src: string, res: Resolution) => any) {
 // Default is just to insert file contents as a string.
 const defaultProcessor = makeProcessor((src: string) => src)
 
+
+const jsonicJsonParser = Jsonic.make(('json' as any))
+
 // TODO: use json plugin to get better error msgs.
-const jsonProcessor = makeProcessor((src: string) =>
-  null == src ? undefined : JSON.parse(src)
+const jsonProcessor = makeProcessor((src: string, res: Resolution) =>
+  // null == src ? undefined : JSON.parse(src)
+  null == src ? undefined : jsonicJsonParser(src, { fileName: res.path })
 )
 
 const jsonicProcessor = makeJsonicProcessor()
@@ -218,17 +262,17 @@ function resolvePathSpec(
     'string' === typeof spec
       ? spec
       : null != spec.path
-      ? '' + spec.path
-      : undefined
+        ? '' + spec.path
+        : undefined
 
   let abs = !!(path?.startsWith('/') || path?.startsWith('\\'))
   let full = abs
     ? path
     : null != path && '' != path
-    ? null != base && '' != base
-      ? base + '/' + path
-      : path
-    : undefined
+      ? null != base && '' != base
+        ? base + '/' + path
+        : path
+      : undefined
 
   let kind = null == full ? NONE : (full.match(/\.([^.]*)$/) || [NONE, NONE])[1]
 
