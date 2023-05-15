@@ -130,7 +130,6 @@ describe('multisource', () => {
     })
   })
 
-
   test('error-basic', () => {
     const o: MultiSourceOptions = {
       resolver: makeMemResolver({}),
@@ -143,21 +142,20 @@ describe('multisource', () => {
     expect(() => j('x:@a', { fileName: 'foo' })).toThrow(/foo:1:3/s)
   })
 
-
   test('error-file', () => {
     const o: MultiSourceOptions = {
       resolver: makeFileResolver(),
     }
     const j = Jsonic.make().use(MultiSource, o)
 
-    expect(() => j('@e02.jsonic', { multisource: { path: __dirname } }))
-      .toThrow(/e02\.jsonic:2:3/)
+    expect(() =>
+      j('@e02.jsonic', { multisource: { path: __dirname } })
+    ).toThrow(/e02\.jsonic:2:3/)
 
     let deps = {}
     try {
       j('@e01.jsonic', { multisource: { path: __dirname, deps } })
-    }
-    catch (e) {
+    } catch (e) {
       // console.log(e)
       // console.dir(e.meta.multisource, { depth: null })
       expect(e.message).toMatch(/e02\.jsonic:2:3/)
@@ -165,7 +163,6 @@ describe('multisource', () => {
       expect(e.meta.multisource.parents[1]).toMatch(/e01\.jsonic/)
     }
   })
-
 
   test('file', () => {
     let j0 = Jsonic.make().use(MultiSource, {
@@ -198,7 +195,6 @@ describe('multisource', () => {
     ).toEqual({ a: 1, b: { d: 2, e: { f: 4 } }, c: 3 })
   })
 
-
   test('file-kind', () => {
     let j0 = Jsonic.make().use(MultiSource, {
       resolver: makeFileResolver(),
@@ -222,16 +218,14 @@ describe('multisource', () => {
 
     deps = {}
     expect(
-      j0('a:1,b:@"./k01.jsonic",d:@"./k02.js",f:@"./k03.json"',
-        { multisource: { path: __dirname, deps } })
+      j0('a:1,b:@"./k01.jsonic",d:@"./k02.js",f:@"./k03.json"', {
+        multisource: { path: __dirname, deps },
+      })
     ).toEqual({ a: 1, b: { c: 2 }, d: { e: 3 }, f: { g: 4 } })
 
     deps = {}
     expect(
-      j0('@"./k04.jsc"',
-        { multisource: { path: __dirname, deps } })
+      j0('@"./k04.jsc"', { multisource: { path: __dirname, deps } })
     ).toEqual({ a: 1, b: { c: 2 }, d: { e: 3 }, f: { g: 4 } })
-
   })
-
 })

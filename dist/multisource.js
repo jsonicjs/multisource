@@ -52,13 +52,11 @@ const MultiSource = (jsonic, popts) => {
                     searchstr: ((res === null || res === void 0 ? void 0 : res.search) || [res.full]).join('\n'),
                 });
             }
-            let fullpath = null != res.full ? res.full :
-                null != res.path ? res.path :
-                    'no-path';
+            let fullpath = null != res.full ? res.full : null != res.path ? res.path : 'no-path';
             res.kind = null == res.kind ? NONE : res.kind;
             // Pass down any meta info.
             let msmeta = ((_b = ctx.meta) === null || _b === void 0 ? void 0 : _b.multisource) || {};
-            let parents = (msmeta.parents || []);
+            let parents = msmeta.parents || [];
             if (null != msmeta.path) {
                 parents.push(msmeta.path);
             }
@@ -68,8 +66,8 @@ const MultiSource = (jsonic, popts) => {
                 multisource: {
                     ...msmeta,
                     parents,
-                    path: res.full
-                }
+                    path: res.full,
+                },
             };
             // Build dependency tree branch.
             if (msmeta.deps) {
@@ -79,7 +77,7 @@ const MultiSource = (jsonic, popts) => {
                     let dep = {
                         tar: parent,
                         src: fullpath,
-                        wen: Date.now()
+                        wen: Date.now(),
                     };
                     depmap[parent] = depmap[parent] || {};
                     depmap[parent][fullpath] = dep;
