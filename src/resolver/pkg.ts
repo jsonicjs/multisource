@@ -8,7 +8,7 @@ import {
   Resolver,
   Resolution,
   resolvePathSpec,
-  // NONE,
+  NONE,
 } from '../multisource'
 
 
@@ -54,6 +54,7 @@ function makePkgResolver(options: any): Resolver {
         ps.full = useRequire.resolve(ps.path, requireOptions)
         if (null != ps.full) {
           src = load(ps.full)
+          ps.kind = (ps.full.match(/\.([^.]*)$/) || [NONE, NONE])[1]
         }
       }
       catch (me: any) {
@@ -69,6 +70,8 @@ function makePkgResolver(options: any): Resolver {
             ps.full = useRequire.resolve(path, requireOptions)
             if (null != ps.full) {
               src = load(ps.full)
+              ps.kind = (ps.full.match(/\.([^.]*)$/) || [NONE, NONE])[1]
+              break
             }
           }
           catch (me: any) {

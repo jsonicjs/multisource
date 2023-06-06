@@ -40,7 +40,6 @@ function makeFileResolver(pathfinder?: PathFinder): Resolver {
       search.push(ps.full)
       src = load(ps.full)
 
-
       if (null == src && NONE === ps.kind) {
         let potentials =
           buildPotentials(ps, popts, (...s) =>

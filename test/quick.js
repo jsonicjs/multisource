@@ -23,12 +23,22 @@ console.log('MS', MultiSource, Debug)
 const opts = {
   resolver:
   // makeMemResolver({'a.jsonic': 'a:1'}),
-  // makeFileResolver()
-  makePkgResolver({require:null})
+  makeFileResolver()
+  // makePkgResolver({require:null})
 }
-const j = Jsonic.make().use(Debug,{trace:true}).use(MultiSource, opts)
+const j = Jsonic.make()
+      // .use(Debug,{trace:true})
+      .use(MultiSource, opts)
 
 // console.log(j('@t01.jsonic'))
+console.log(j('@t02.jsonic'))
+// console.log(j(`
+// @t01.jsonic
+// @t02.jsonic
+// @e02.jsonic
+// x:1
+// `))
+
 // console.log(j('@"./t01.jsonic"'))
 
 // console.log(j('x:@a.jsonic'))
@@ -40,4 +50,10 @@ const j = Jsonic.make().use(Debug,{trace:true}).use(MultiSource, opts)
 // console.log(j('',{log:-1}))
 
 
-console.log(j('@"jsonic-multisource-pkg-test/zed"'))
+// console.log(j('@"jsonic-multisource-pkg-test/zed"'))
+
+// console.log(j(`
+// a:1
+// @"jsonic-multisource-pkg-test/zed"
+// b:2
+// `))

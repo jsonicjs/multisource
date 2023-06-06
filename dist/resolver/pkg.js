@@ -35,6 +35,7 @@ function makePkgResolver(options) {
                 ps.full = useRequire.resolve(ps.path, requireOptions);
                 if (null != ps.full) {
                     src = load(ps.full);
+                    ps.kind = (ps.full.match(/\.([^.]*)$/) || [multisource_1.NONE, multisource_1.NONE])[1];
                 }
             }
             catch (me) {
@@ -46,6 +47,8 @@ function makePkgResolver(options) {
                         ps.full = useRequire.resolve(path, requireOptions);
                         if (null != ps.full) {
                             src = load(ps.full);
+                            ps.kind = (ps.full.match(/\.([^.]*)$/) || [multisource_1.NONE, multisource_1.NONE])[1];
+                            break;
                         }
                     }
                     catch (me) {

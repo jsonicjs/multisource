@@ -117,6 +117,8 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
       // console.log('SRC', from, spec)
 
       let res = resolver(spec, popts, rule, ctx, jsonic)
+      // console.log('RES', res)
+
       if (!res.found) {
         return rule.parent?.o0.bad('multisource_not_found', {
           ...res,
@@ -161,10 +163,15 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
         }
       }
 
-      ctx.meta = meta
+      // ctx.meta = meta
+      let ctxproc = {
+        ...ctx,
+        meta,
+      }
 
       let proc = processor[res.kind] || processor[NONE]
-      proc(res, popts, rule, ctx, jsonic)
+      // console.log('FROM', from, 'PROC', proc, processor, ctxproc.meta)
+      proc(res, popts, rule, ctxproc, jsonic)
 
       // Handle the {@foo} case, injecting keys into parent map.
       if ('pair' === from) {

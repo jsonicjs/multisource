@@ -46,6 +46,7 @@ const MultiSource = (jsonic, popts) => {
             let spec = rule.child.node;
             // console.log('SRC', from, spec)
             let res = resolver(spec, popts, rule, ctx, jsonic);
+            // console.log('RES', res)
             if (!res.found) {
                 return (_a = rule.parent) === null || _a === void 0 ? void 0 : _a.o0.bad('multisource_not_found', {
                     ...res,
@@ -83,9 +84,14 @@ const MultiSource = (jsonic, popts) => {
                     depmap[parent][fullpath] = dep;
                 }
             }
-            ctx.meta = meta;
+            // ctx.meta = meta
+            let ctxproc = {
+                ...ctx,
+                meta,
+            };
             let proc = processor[res.kind] || processor[NONE];
-            proc(res, popts, rule, ctx, jsonic);
+            // console.log('FROM', from, 'PROC', proc, processor, ctxproc.meta)
+            proc(res, popts, rule, ctxproc, jsonic);
             // Handle the {@foo} case, injecting keys into parent map.
             if ('pair' === from) {
                 if (ctx.cfg.map.merge) {

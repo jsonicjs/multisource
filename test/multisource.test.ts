@@ -192,7 +192,7 @@ describe('multisource', () => {
       j0('a:1,b:@"./t02.jsonic",c:3', {
         multisource: { path: __dirname, deps },
       })
-    ).toEqual({ a: 1, b: { d: 2, e: { f: 4 } }, c: 3 })
+    ).toEqual({ a: 1, b: { d: 2, e: { f: 4 }, g: 9 }, c: 3 })
   })
 
   test('file-kind', () => {
