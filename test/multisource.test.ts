@@ -42,7 +42,7 @@ describe('multisource', () => {
   x:d:@d.json 
   // x:e:@e.js 
   y:1
-  `)
+  `),
     ).toEqual({
       x: {
         a: {
@@ -149,7 +149,7 @@ describe('multisource', () => {
     const j = Jsonic.make().use(MultiSource, o)
 
     expect(() =>
-      j('@e02.jsonic', { multisource: { path: __dirname } })
+      j('@e02.jsonic', { multisource: { path: __dirname } }),
     ).toThrow(/e02\.jsonic:2:3/)
 
     let deps = {}
@@ -171,16 +171,16 @@ describe('multisource', () => {
 
     let deps = {}
     expect(
-      j0('a:1,b:@"./t01.jsonic"', { multisource: { path: __dirname, deps } })
+      j0('a:1,b:@"./t01.jsonic"', { multisource: { path: __dirname, deps } }),
     ).toEqual({ a: 1, b: { c: 2 } })
     // console.dir(deps, { depth: null })
 
     expect(
-      j0('a:1,b:@"./t01.jsonic"', { multisource: { path: __dirname } })
+      j0('a:1,b:@"./t01.jsonic"', { multisource: { path: __dirname } }),
     ).toEqual({ a: 1, b: { c: 2 } })
 
     expect(() => j0('a:1,b:@"./t01.jsonic"', { multisource: {} })).toThrow(
-      'not found'
+      'not found',
     )
 
     expect(() => j0('a:1,b:@"./t01.jsonic"', {})).toThrow('not found')
@@ -191,7 +191,7 @@ describe('multisource', () => {
     expect(
       j0('a:1,b:@"./t02.jsonic",c:3', {
         multisource: { path: __dirname, deps },
-      })
+      }),
     ).toEqual({ a: 1, b: { d: 2, e: { f: 4 }, g: 9 }, c: 3 })
   })
 
@@ -202,30 +202,30 @@ describe('multisource', () => {
 
     let deps = {}
     expect(
-      j0('a:1,b:@"./k01.jsonic"', { multisource: { path: __dirname, deps } })
+      j0('a:1,b:@"./k01.jsonic"', { multisource: { path: __dirname, deps } }),
     ).toEqual({ a: 1, b: { c: 2 } })
     // console.dir(deps, { depth: null })
 
     deps = {}
     expect(
-      j0('a:1,d:@"./k02.js"', { multisource: { path: __dirname, deps } })
+      j0('a:1,d:@"./k02.js"', { multisource: { path: __dirname, deps } }),
     ).toEqual({ a: 1, d: { e: 3 } })
 
     deps = {}
     expect(
-      j0('a:1,f:@"./k03.json"', { multisource: { path: __dirname, deps } })
+      j0('a:1,f:@"./k03.json"', { multisource: { path: __dirname, deps } }),
     ).toEqual({ a: 1, f: { g: 4 } })
 
     deps = {}
     expect(
       j0('a:1,b:@"./k01.jsonic",d:@"./k02.js",f:@"./k03.json"', {
         multisource: { path: __dirname, deps },
-      })
+      }),
     ).toEqual({ a: 1, b: { c: 2 }, d: { e: 3 }, f: { g: 4 } })
 
     deps = {}
     expect(
-      j0('@"./k04.jsc"', { multisource: { path: __dirname, deps } })
+      j0('@"./k04.jsc"', { multisource: { path: __dirname, deps } }),
     ).toEqual({ a: 1, b: { c: 2 }, d: { e: 3 }, f: { g: 4 } })
   })
 })

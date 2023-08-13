@@ -50,7 +50,7 @@ type Resolver = (
   popts: MultiSourceOptions,
   rule: Rule,
   ctx: Context,
-  jsonic: Jsonic
+  jsonic: Jsonic,
 ) => Resolution
 
 // Process the source into a value.
@@ -59,7 +59,7 @@ type Processor = (
   popts: MultiSourceOptions,
   rule: Rule,
   ctx: Context,
-  jsonic: Jsonic
+  jsonic: Jsonic,
 ) => void
 
 type Dependency = {
@@ -180,7 +180,7 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
             rule.parent.parent.node,
             res.val,
             rule,
-            ctx
+            ctx,
           )
         } else if (ctx.cfg.map.extend) {
           rule.parent.parent.node = deep(rule.parent.parent.node, res.val)
@@ -233,7 +233,7 @@ const jsonicJsonParser = Jsonic.make('json' as any)
 // TODO: use json plugin to get better error msgs.
 const jsonProcessor = makeProcessor((src: string, res: Resolution) =>
   // null == src ? undefined : JSON.parse(src)
-  null == src ? undefined : jsonicJsonParser(src, { fileName: res.path })
+  null == src ? undefined : jsonicJsonParser(src, { fileName: res.path }),
 )
 
 const jsonicProcessor = makeJsonicProcessor()
@@ -255,11 +255,11 @@ function resolvePathSpec(
   popts: MultiSourceOptions,
   ctx: Context,
   spec: any,
-  resolvefolder: (path: string) => string
+  resolvefolder: (path: string) => string,
 ): PathSpec {
   let msmeta = ctx.meta?.multisource
   let base = resolvefolder(
-    null == msmeta || null == msmeta.path ? popts.path : msmeta.path
+    null == msmeta || null == msmeta.path ? popts.path : msmeta.path,
   )
 
   let path =
