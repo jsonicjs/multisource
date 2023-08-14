@@ -1,6 +1,6 @@
 {
   "name": "@jsonic/multisource",
-  "version": "1.0.4",
+  "version": "1.0.6",
   "description": "",
   "main": "dist/multisource.js",
   "type": "commonjs",
@@ -31,7 +31,7 @@
     "reset": "npm run clean && npm i && npm test",
     "repo-tag": "REPO_VERSION=`node -e \"console.log(require('./package').version)\"` && echo TAG: v$REPO_VERSION && git commit -a -m v$REPO_VERSION && git push && git tag v$REPO_VERSION && git push --tags;",
     "repo-publish": "npm run clean && npm i && npm run repo-publish-quick",
-    "repo-publish-quick": "npm run prettier && npm run build && npm run test && npm run repo-tag && npm publish --access public --registry https://registry.npmjs.org "
+    "repo-publish-quick": "npm run prettier && npm run build && npm run test && npm run doc && npm run repo-tag && npm publish --access public --registry https://registry.npmjs.org "
   },
   "license": "MIT",
   "files": [
@@ -43,7 +43,7 @@
     "dist"
   ],
   "devDependencies": {
-    "@jsonic/doc": "^0.0.7",
+    "@jsonic/doc": "^0.0.8",
     "@types/jest": "^29.5.3",
     "browserify": "^17.0.0",
     "es-jest": "^2.1.0",

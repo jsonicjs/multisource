@@ -1,7 +1,7 @@
 "use strict";
 /* Copyright (c) 2021 Richard Rodger, MIT License */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TOP = exports.NONE = exports.resolvePathSpec = exports.MultiSource = void 0;
+exports.meta = exports.TOP = exports.NONE = exports.resolvePathSpec = exports.MultiSource = void 0;
 const jsonic_next_1 = require("@jsonic/jsonic-next");
 const directive_1 = require("@jsonic/directive");
 const jsonic_1 = require("./processor/jsonic");
@@ -187,4 +187,9 @@ function resolvePathSpec(popts, ctx, spec, resolvefolder) {
     return res;
 }
 exports.resolvePathSpec = resolvePathSpec;
+// Plugin meta data
+const meta = {
+    name: 'MultiSource',
+};
+exports.meta = meta;
 //# sourceMappingURL=multisource.js.map

@@ -292,6 +292,11 @@ function resolvePathSpec(
   return res
 }
 
+// Plugin meta data
+const meta = {
+  name: 'MultiSource',
+}
+
 export type {
   Resolver,
   Resolution,
@@ -303,16 +308,4 @@ export type {
   PathSpec,
 }
 
-export {
-  MultiSource,
-  resolvePathSpec,
-  NONE,
-  TOP,
-
-  // // Re-exported from jsonic for convenience
-  // Context,
-
-  // // TODO: remove for better tree shaking
-  // makeFileResolver,
-  // makeMemResolver,
-}
+export { MultiSource, resolvePathSpec, NONE, TOP, meta }

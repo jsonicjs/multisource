@@ -42,5 +42,8 @@ type DependencyMap = {
 declare const TOP: unique symbol;
 declare const MultiSource: Plugin;
 declare function resolvePathSpec(popts: MultiSourceOptions, ctx: Context, spec: any, resolvefolder: (path: string) => string): PathSpec;
+declare const meta: {
+    name: string;
+};
 export type { Resolver, Resolution, Processor, MultiSourceOptions, Dependency, DependencyMap, MultiSourceMeta, PathSpec, };
-export { MultiSource, resolvePathSpec, NONE, TOP, };
+export { MultiSource, resolvePathSpec, NONE, TOP, meta };
