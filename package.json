@@ -1,6 +1,6 @@
 {
   "name": "@jsonic/multisource",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "",
   "main": "dist/multisource.js",
   "type": "commonjs",
@@ -23,6 +23,7 @@
     "test-some": "jest -t",
     "test-watch": "jest --coverage --watchAll",
     "watch": "tsc -w -d",
+    "doc": "jsonic-doc",
     "build": "tsc -d && cp dist/multisource.js dist/multisource.min.js && browserify -o dist/multisource.min.js -e dist/multisource.js -s @JsonicMultiSource -im -i assert -p tinyify",
     "view-coverage": "open coverage/lcov-report/index.html",
     "prettier": "prettier --write --no-semi --single-quote **/*.ts",
@@ -42,6 +43,7 @@
     "dist"
   ],
   "devDependencies": {
+    "@jsonic/doc": "^0.0.7",
     "@types/jest": "^29.5.3",
     "browserify": "^17.0.0",
     "es-jest": "^2.1.0",
@@ -51,10 +53,12 @@
     "prettier": "^3.0.1",
     "tinyify": "^4.0.0",
     "typescript": "^5.1.6",
-    "jsonic-multisource-pkg-test": "^0.0.1"
+    "jsonic-multisource-pkg-test": "^0.0.1",
+    "@jsonic/directive": ">=0.11.4",
+    "@jsonic/jsonic-next": ">=2.12.1"
   },
   "peerDependencies": {
-    "@jsonic/directive": ">=0.11.0",
-    "@jsonic/jsonic-next": ">=2.10.0"
+    "@jsonic/directive": ">=0.11.4",
+    "@jsonic/jsonic-next": ">=2.12.1"
   }
 }
