@@ -70,6 +70,9 @@ const MultiSource = (jsonic, popts) => {
                     path: res.full,
                 },
             };
+            if (rule.k.path && Array.isArray(rule.k.path)) {
+                meta.path = { base: rule.k.path.slice(0) };
+            }
             // Build dependency tree branch.
             if (msmeta.deps) {
                 let depmap = msmeta.deps;

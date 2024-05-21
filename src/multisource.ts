@@ -85,7 +85,6 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
 
   const { deep } = jsonic.util
 
-
   // Normalize implicit extensions to format `.name`.
   const implictExt = (popts.implictExt || []) as string[]
   for (let extI = 0; extI < implictExt.length; extI++) {
@@ -104,7 +103,6 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
         'The source path $path was not found.\n\nSearch paths:\n${searchstr}',
     },
   })
-
 
   // Define a directive that can load content from multiple sources.
   let dopts: DirectiveOptions = {
