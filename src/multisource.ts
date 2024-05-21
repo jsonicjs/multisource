@@ -85,6 +85,7 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
 
   const { deep } = jsonic.util
 
+
   // Normalize implicit extensions to format `.name`.
   const implictExt = (popts.implictExt || []) as string[]
   for (let extI = 0; extI < implictExt.length; extI++) {
@@ -103,6 +104,7 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
         'The source path $path was not found.\n\nSearch paths:\n${searchstr}',
     },
   })
+
 
   // Define a directive that can load content from multiple sources.
   let dopts: DirectiveOptions = {
@@ -138,7 +140,7 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
         parents.push(msmeta.path)
       }
 
-      let meta = {
+      let meta: any = {
         ...(ctx.meta || {}),
         fileName: res.path,
         multisource: {
@@ -146,6 +148,10 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
           parents,
           path: res.full,
         },
+      }
+
+      if (rule.k.path && Array.isArray(rule.k.path)) {
+        meta.path = { base: rule.k.path.slice(0) }
       }
 
       // Build dependency tree branch.
@@ -217,6 +223,7 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
       })
     },
   }
+
   jsonic.use(Directive, dopts)
 }
 
@@ -266,17 +273,17 @@ function resolvePathSpec(
     'string' === typeof spec
       ? spec
       : null != spec.path
-      ? '' + spec.path
-      : undefined
+        ? '' + spec.path
+        : undefined
 
   let abs = !!(path?.startsWith('/') || path?.startsWith('\\'))
   let full = abs
     ? path
     : null != path && '' != path
-    ? null != base && '' != base
-      ? base + '/' + path
-      : path
-    : undefined
+      ? null != base && '' != base
+        ? base + '/' + path
+        : path
+      : undefined
 
   let kind = null == full ? NONE : (full.match(/\.([^.]*)$/) || [NONE, NONE])[1]
 

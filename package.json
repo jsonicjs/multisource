@@ -51,19 +51,20 @@
     "./processor/jsonic": "./dist/processor/jsonic.js"
   },
   "devDependencies": {
+    "@jsonic/directive": ">=0.11.4",
     "@jsonic/doc": "^0.0.8",
-    "@types/jest": "^29.5.4",
+    "@jsonic/jsonic-next": ">=2.12.1",
+    "@jsonic/path": "^0.7.0",
+    "@types/jest": "^29.5.12",
     "browserify": "^17.0.0",
     "es-jest": "^2.1.0",
-    "esbuild": "^0.19.2",
+    "esbuild": "^0.21.3",
     "esbuild-jest": "^0.5.0",
-    "jest": "^29.6.4",
-    "prettier": "^3.0.2",
-    "tinyify": "^4.0.0",
-    "typescript": "^5.2.2",
+    "jest": "^29.7.0",
     "jsonic-multisource-pkg-test": "^0.0.1",
-    "@jsonic/directive": ">=0.11.4",
-    "@jsonic/jsonic-next": ">=2.12.1"
+    "prettier": "^3.2.5",
+    "tinyify": "^4.0.0",
+    "typescript": "^5.4.5"
   },
   "peerDependencies": {
     "@jsonic/directive": ">=0.11.4",

@@ -5,6 +5,8 @@ import { MultiSource, MultiSourceOptions } from '../src/multisource'
 import { makeJavaScriptProcessor } from '../src/processor/js'
 import { makeMemResolver } from '../src/resolver/mem'
 import { makeFileResolver } from '../src/resolver/file'
+import { Path } from '@jsonic/path'
+
 
 describe('multisource', () => {
   test('happy', () => {
@@ -228,4 +230,47 @@ describe('multisource', () => {
       j0('@"./k04.jsc"', { multisource: { path: __dirname, deps } }),
     ).toEqual({ a: 1, b: { c: 2 }, d: { e: 3 }, f: { g: 4 } })
   })
+
+
+
+
+  test('path', () => {
+    const o: MultiSourceOptions = {
+      resolver: makeMemResolver({
+        'x.jsonic': 'x:y:1',
+      }),
+      // processor: {
+      //   js: makeJavaScriptProcessor({ evalOnly: true }),
+      // },
+    }
+    const j = Jsonic
+      .make()
+      .use(MultiSource, o)
+      .use(Path)
+      .use((jsonic) => {
+        jsonic.rule('val', rs => {
+          rs
+            .ac(false, (r) => {
+              if ('object' === typeof (r.node)) {
+                r.node.$ = `${r.k.path}`
+              }
+            })
+        })
+      })
+
+    expect(j('a:b:@"x.jsonic"')).toEqual({
+      $: '',
+      a: {
+        $: 'a',
+        b: {
+          $: 'a,b',
+          x: {
+            $: 'a,b,x',
+            y: 1,
+          },
+        },
+      },
+    })
+  })
+
 })
