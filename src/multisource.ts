@@ -119,10 +119,10 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
       let res = resolver(spec, popts, rule, ctx, jsonic)
       // console.log('RES', res)
 
-      if (!res.found) {
+      if (null == res || !res.found) {
         return rule.parent?.o0.bad('multisource_not_found', {
-          ...res,
-          searchstr: (res?.search || [res.full]).join('\n'),
+          ...(res || {}),
+          searchstr: (res?.search || [res?.full]).join('\n'),
         })
       }
 

@@ -47,10 +47,10 @@ const MultiSource = (jsonic, popts) => {
             // console.log('SRC', from, spec)
             let res = resolver(spec, popts, rule, ctx, jsonic);
             // console.log('RES', res)
-            if (!res.found) {
+            if (null == res || !res.found) {
                 return rule.parent?.o0.bad('multisource_not_found', {
-                    ...res,
-                    searchstr: (res?.search || [res.full]).join('\n'),
+                    ...(res || {}),
+                    searchstr: (res?.search || [res?.full]).join('\n'),
                 });
             }
             let fullpath = null != res.full ? res.full : null != res.path ? res.path : 'no-path';
