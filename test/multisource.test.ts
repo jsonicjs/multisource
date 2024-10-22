@@ -1,11 +1,15 @@
-/* Copyright (c) 2021 Richard Rodger and other contributors, MIT License */
+/* Copyright (c) 2021-2024 Richard Rodger and other contributors, MIT License */
+
+import { test, describe } from 'node:test'
+import { expect } from '@hapi/code'
 
 import { Jsonic } from '@jsonic/jsonic-next'
-import { MultiSource, MultiSourceOptions } from '../src/multisource'
-import { makeJavaScriptProcessor } from '../src/processor/js'
-import { makeMemResolver } from '../src/resolver/mem'
-import { makeFileResolver } from '../src/resolver/file'
+import { MultiSource, MultiSourceOptions } from '../dist/multisource'
+// import { makeJavaScriptProcessor } from '../dist/processor/js'
+import { makeMemResolver } from '../dist/resolver/mem'
+import { makeFileResolver } from '../dist/resolver/file'
 import { Path } from '@jsonic/path'
+
 
 describe('multisource', () => {
   test('happy', () => {
@@ -26,14 +30,14 @@ describe('multisource', () => {
     }
     const j = Jsonic.make().use(MultiSource, o)
 
-    expect(j('a:@a.jsonic,x:1')).toEqual({ a: { a: 1 }, x: 1 })
-    expect(j('b:@b.jsc,x:1')).toEqual({ b: { b: 2 }, x: 1 })
-    expect(j('c:@c.txt,x:1')).toEqual({ c: 'CCC', x: 1 })
-    expect(j('d:@d.json,x:1')).toEqual({ d: { d: 3 }, x: 1 })
-    // expect(j('e:@e.js,x:1')).toEqual({ e: { e: 4 }, x: 1 })
-    expect(j('f:@f,x:1')).toEqual({ f: { f: 5 }, x: 1 })
-    expect(j('g:@g,x:1')).toEqual({ g: { g: 6 }, x: 1 })
-    expect(j('h:@h,x:1')).toEqual({ h: { h: 7 }, x: 1 })
+    expect(j('a:@a.jsonic,x:1')).equal({ a: { a: 1 }, x: 1 })
+    expect(j('b:@b.jsc,x:1')).equal({ b: { b: 2 }, x: 1 })
+    expect(j('c:@c.txt,x:1')).equal({ c: 'CCC', x: 1 })
+    expect(j('d:@d.json,x:1')).equal({ d: { d: 3 }, x: 1 })
+    // expect(j('e:@e.js,x:1')).equal({ e: { e: 4 }, x: 1 })
+    expect(j('f:@f,x:1')).equal({ f: { f: 5 }, x: 1 })
+    expect(j('g:@g,x:1')).equal({ g: { g: 6 }, x: 1 })
+    expect(j('h:@h,x:1')).equal({ h: { h: 7 }, x: 1 })
 
     expect(
       j(`
@@ -44,7 +48,7 @@ describe('multisource', () => {
   // x:e:@e.js 
   y:1
   `),
-    ).toEqual({
+    ).equal({
       x: {
         a: {
           a: 1,
@@ -73,38 +77,38 @@ describe('multisource', () => {
     }
     const j = Jsonic.make().use(MultiSource, o)
 
-    expect(j('a:@a.jsonic,x:1')).toEqual({ a: { a: 1 }, x: 1 })
-    expect(j('[@a.jsonic,{x:1}]')).toEqual([{ a: 1 }, { x: 1 }])
+    expect(j('a:@a.jsonic,x:1')).equal({ a: { a: 1 }, x: 1 })
+    expect(j('[@a.jsonic,{x:1}]')).equal([{ a: 1 }, { x: 1 }])
 
-    expect(j('@a.jsonic')).toEqual({ a: 1 })
-    expect(j('b:2 @a.jsonic')).toEqual({ b: 2, a: 1 })
-    expect(j('b:2 @a.jsonic c:3')).toEqual({ b: 2, a: 1, c: 3 })
-    expect(j('@a.jsonic b:2')).toEqual({ a: 1, b: 2 })
+    expect(j('@a.jsonic')).equal({ a: 1 })
+    expect(j('b:2 @a.jsonic')).equal({ b: 2, a: 1 })
+    expect(j('b:2 @a.jsonic c:3')).equal({ b: 2, a: 1, c: 3 })
+    expect(j('@a.jsonic b:2')).equal({ a: 1, b: 2 })
 
-    expect(j('y:@b.jsonic,x:1')).toEqual({ y: { a: { b: 1, c: 2 } }, x: 1 })
-    expect(j('@b.jsonic')).toEqual({ a: { b: 1, c: 2 } })
-    expect(j('x:2 @b.jsonic')).toEqual({ x: 2, a: { b: 1, c: 2 } })
-    expect(j('x:2 @b.jsonic y:3')).toEqual({ x: 2, a: { b: 1, c: 2 }, y: 3 })
-    expect(j('@b.jsonic y:2')).toEqual({ a: { b: 1, c: 2 }, y: 2 })
+    expect(j('y:@b.jsonic,x:1')).equal({ y: { a: { b: 1, c: 2 } }, x: 1 })
+    expect(j('@b.jsonic')).equal({ a: { b: 1, c: 2 } })
+    expect(j('x:2 @b.jsonic')).equal({ x: 2, a: { b: 1, c: 2 } })
+    expect(j('x:2 @b.jsonic y:3')).equal({ x: 2, a: { b: 1, c: 2 }, y: 3 })
+    expect(j('@b.jsonic y:2')).equal({ a: { b: 1, c: 2 }, y: 2 })
 
-    expect(j('a:{d:3} @b.jsonic')).toEqual({ a: { b: 1, c: 2, d: 3 } })
-    expect(j('a:{d:3} @b.jsonic y:2')).toEqual({
+    expect(j('a:{d:3} @b.jsonic')).equal({ a: { b: 1, c: 2, d: 3 } })
+    expect(j('a:{d:3} @b.jsonic y:2')).equal({
       a: { b: 1, c: 2, d: 3 },
       y: 2,
     })
 
-    expect(j('a:{d:3} @b.jsonic a:{d:4,f:5}')).toEqual({
+    expect(j('a:{d:3} @b.jsonic a:{d:4,f:5}')).equal({
       a: { b: 1, c: 2, d: 4, f: 5 },
     })
-    expect(j('@b.jsonic a:{d:4,f:5}')).toEqual({
+    expect(j('@b.jsonic a:{d:4,f:5}')).equal({
       a: { b: 1, c: 2, d: 4, f: 5 },
     })
 
-    expect(j('a:{d:3} @b.jsonic a:{d:4,f:5} z:1')).toEqual({
+    expect(j('a:{d:3} @b.jsonic a:{d:4,f:5} z:1')).equal({
       a: { b: 1, c: 2, d: 4, f: 5 },
       z: 1,
     })
-    expect(j('@b.jsonic a:{d:4,f:5} z:1')).toEqual({
+    expect(j('@b.jsonic a:{d:4,f:5} z:1')).equal({
       a: { b: 1, c: 2, d: 4, f: 5 },
       z: 1,
     })
@@ -120,16 +124,17 @@ describe('multisource', () => {
     }
     const j = Jsonic.make().use(MultiSource, o)
 
-    expect(j('@a')).toEqual({ a: 1, b: { b: 2, c: { c: 3 } }, x: 99 })
+    expect(j('@a')).equal({ a: 1, b: { b: 2, c: { c: 3 } }, x: 99 })
 
-    expect(j('@a', {})).toEqual({ a: 1, b: { b: 2, c: { c: 3 } }, x: 99 })
-    expect(j('@a', { x: 1 })).toEqual({ a: 1, b: { b: 2, c: { c: 3 } }, x: 99 })
-    expect(j('@a', { multisource: { path: undefined } })).toEqual({
+    expect(j('@a', {})).equal({ a: 1, b: { b: 2, c: { c: 3 } }, x: 99 })
+    expect(j('@a', { x: 1 })).equal({ a: 1, b: { b: 2, c: { c: 3 } }, x: 99 })
+    expect(j('@a', { multisource: { path: undefined } })).equal({
       a: 1,
       b: { b: 2, c: { c: 3 } },
       x: 99,
     })
   })
+
 
   test('error-basic', () => {
     const o: MultiSourceOptions = {
@@ -138,10 +143,11 @@ describe('multisource', () => {
     const j = Jsonic.make().use(MultiSource, o)
 
     // j('x:@a')
-    expect(() => j('x:@a')).toThrow(/multisource_not_found.*:1:3/s)
+    expect(() => j('x:@a')).throws(/multisource_not_found.*:1:3/s)
 
-    expect(() => j('x:@a', { fileName: 'foo' })).toThrow(/foo:1:3/s)
+    expect(() => j('x:@a', { fileName: 'foo' })).throws(/foo:1:3/s)
   })
+
 
   test('error-file', () => {
     const o: MultiSourceOptions = {
@@ -150,51 +156,77 @@ describe('multisource', () => {
     const j = Jsonic.make().use(MultiSource, o)
 
     expect(() =>
-      j('@e02.jsonic', { multisource: { path: __dirname } }),
-    ).toThrow(/e02\.jsonic:2:3/)
+      j('@../test/e02.jsonic', { multisource: { path: __dirname } }),
+    ).throws(/e02\.jsonic:2:3/)
 
     let deps = {}
     try {
-      j('@e01.jsonic', { multisource: { path: __dirname, deps } })
-    } catch (e) {
+      j('@../test/e01.jsonic', { multisource: { path: __dirname, deps } })
+    }
+    catch (e: any) {
       // console.log(e)
       // console.dir(e.meta.multisource, { depth: null })
-      expect(e.message).toMatch(/e02\.jsonic:2:3/)
-      expect(e.meta.multisource.path).toMatch(/e02\.jsonic/)
-      expect(e.meta.multisource.parents[1]).toMatch(/e01\.jsonic/)
+      expect(e.message).match(/e02\.jsonic:2:3/)
+      expect(e.meta.multisource.path).match(/e02\.jsonic/)
+      expect(e.meta.multisource.parents[1]).match(/e01\.jsonic/)
     }
   })
 
-  test('file', () => {
+
+  test('basic-file', () => {
     let j0 = Jsonic.make().use(MultiSource, {
       resolver: makeFileResolver(),
     })
 
     let deps = {}
     expect(
-      j0('a:1,b:@"./t01.jsonic"', { multisource: { path: __dirname, deps } }),
-    ).toEqual({ a: 1, b: { c: 2 } })
+      j0('a:1,b:@"../test/t01.jsonic"', { multisource: { path: __dirname, deps } }),
+    ).equal({ a: 1, b: { c: 2 } })
     // console.dir(deps, { depth: null })
 
     expect(
-      j0('a:1,b:@"./t01.jsonic"', { multisource: { path: __dirname } }),
-    ).toEqual({ a: 1, b: { c: 2 } })
+      j0('a:1,b:@"../test/t01.jsonic"', { multisource: { path: __dirname } }),
+    ).equal({ a: 1, b: { c: 2 } })
 
-    expect(() => j0('a:1,b:@"./t01.jsonic"', { multisource: {} })).toThrow(
-      'not found',
+
+    expect(
+      j0('@"../test/t01.jsonic"', { multisource: { path: __dirname } }),
+    ).equal({ c: 2 })
+
+    expect(
+      j0('a:1,@"../test/t01.jsonic"', { multisource: { path: __dirname } }),
+    ).equal({ a: 1, c: 2 })
+
+    expect(
+      j0('@"../test/t01.jsonic",a:1', { multisource: { path: __dirname } }),
+    ).equal({ a: 1, c: 2 })
+
+    expect(
+      j0('a:1,@"../test/t01.jsonic",b:2', { multisource: { path: __dirname } }),
+    ).equal({ a: 1, c: 2, b: 2 })
+
+    expect(
+      j0('a:1,@"../test/t01.jsonic",b:2,@"../test/t01.jsonic",',
+        { multisource: { path: __dirname } }),
+    ).equal({ a: 1, c: 2, b: 2 })
+
+
+    expect(() => j0('a:1,b:@"../test/t01.jsonic"', { multisource: {} })).throws(
+      /not found/,
     )
 
-    expect(() => j0('a:1,b:@"./t01.jsonic"', {})).toThrow('not found')
+    expect(() => j0('a:1,b:@"../test/t01.jsonic"', {})).throws(/not found/)
 
-    expect(() => j0('a:1,b:@"./t01.jsonic"')).toThrow('not found')
+    expect(() => j0('a:1,b:@"../test/t01.jsonic"')).throws(/not found/)
 
     deps = {}
     expect(
-      j0('a:1,b:@"./t02.jsonic",c:3', {
+      j0('a:1,b:@"../test/t02.jsonic",c:3', {
         multisource: { path: __dirname, deps },
       }),
-    ).toEqual({ a: 1, b: { d: 2, e: { f: 4 }, g: 9 }, c: 3 })
+    ).equal({ a: 1, b: { d: 2, e: { f: 4 }, g: 9 }, c: 3 })
   })
+
 
   test('file-kind', () => {
     let j0 = Jsonic.make().use(MultiSource, {
@@ -203,31 +235,31 @@ describe('multisource', () => {
 
     let deps = {}
     expect(
-      j0('a:1,b:@"./k01.jsonic"', { multisource: { path: __dirname, deps } }),
-    ).toEqual({ a: 1, b: { c: 2 } })
+      j0('a:1,b:@"../test/k01.jsonic"', { multisource: { path: __dirname, deps } }),
+    ).equal({ a: 1, b: { c: 2 } })
     // console.dir(deps, { depth: null })
 
     deps = {}
     expect(
-      j0('a:1,d:@"./k02.js"', { multisource: { path: __dirname, deps } }),
-    ).toEqual({ a: 1, d: { e: 3 } })
+      j0('a:1,d:@"../test/k02.js"', { multisource: { path: __dirname, deps } }),
+    ).equal({ a: 1, d: { e: 3 } })
 
     deps = {}
     expect(
-      j0('a:1,f:@"./k03.json"', { multisource: { path: __dirname, deps } }),
-    ).toEqual({ a: 1, f: { g: 4 } })
+      j0('a:1,f:@"../test/k03.json"', { multisource: { path: __dirname, deps } }),
+    ).equal({ a: 1, f: { g: 4 } })
 
     deps = {}
     expect(
-      j0('a:1,b:@"./k01.jsonic",d:@"./k02.js",f:@"./k03.json"', {
+      j0('a:1,b:@"../test/k01.jsonic",d:@"../test/k02.js",f:@"../test/k03.json"', {
         multisource: { path: __dirname, deps },
       }),
-    ).toEqual({ a: 1, b: { c: 2 }, d: { e: 3 }, f: { g: 4 } })
+    ).equal({ a: 1, b: { c: 2 }, d: { e: 3 }, f: { g: 4 } })
 
     deps = {}
     expect(
-      j0('@"./k04.jsc"', { multisource: { path: __dirname, deps } }),
-    ).toEqual({ a: 1, b: { c: 2 }, d: { e: 3 }, f: { g: 4 } })
+      j0('@"../test/k04.jsc"', { multisource: { path: __dirname, deps } }),
+    ).equal({ a: 1, b: { c: 2 }, d: { e: 3 }, f: { g: 4 } })
   })
 
   test('path', () => {
@@ -252,7 +284,7 @@ describe('multisource', () => {
         })
       })
 
-    expect(j('a:b:@"x.jsonic"')).toEqual({
+    expect(j('a:b:@"x.jsonic"')).equal({
       $: '',
       a: {
         $: 'a',

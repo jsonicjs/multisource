@@ -1,7 +1,8 @@
 "use strict";
 /* Copyright (c) 2021 Richard Rodger, MIT License */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.meta = exports.TOP = exports.NONE = exports.resolvePathSpec = exports.MultiSource = void 0;
+exports.meta = exports.TOP = exports.NONE = exports.MultiSource = void 0;
+exports.resolvePathSpec = resolvePathSpec;
 const jsonic_next_1 = require("@jsonic/jsonic-next");
 const directive_1 = require("@jsonic/directive");
 const jsonic_1 = require("./processor/jsonic");
@@ -41,22 +42,21 @@ const MultiSource = (jsonic, popts) => {
             open: 'val,pair',
         },
         action: function multisourceStateAction(rule, ctx) {
-            var _a, _b;
             let from = rule.parent.name;
             let spec = rule.child.node;
             // console.log('SRC', from, spec)
             let res = resolver(spec, popts, rule, ctx, jsonic);
             // console.log('RES', res)
             if (!res.found) {
-                return (_a = rule.parent) === null || _a === void 0 ? void 0 : _a.o0.bad('multisource_not_found', {
+                return rule.parent?.o0.bad('multisource_not_found', {
                     ...res,
-                    searchstr: ((res === null || res === void 0 ? void 0 : res.search) || [res.full]).join('\n'),
+                    searchstr: (res?.search || [res.full]).join('\n'),
                 });
             }
             let fullpath = null != res.full ? res.full : null != res.path ? res.path : 'no-path';
             res.kind = null == res.kind ? NONE : res.kind;
             // Pass down any meta info.
-            let msmeta = ((_b = ctx.meta) === null || _b === void 0 ? void 0 : _b.multisource) || {};
+            let msmeta = ctx.meta?.multisource || {};
             let parents = msmeta.parents || [];
             if (null != msmeta.path) {
                 parents.push(msmeta.path);
@@ -162,15 +162,14 @@ MultiSource.defaults = {
     implictExt: ['jsonic', 'jsc', 'json', 'js'],
 };
 function resolvePathSpec(popts, ctx, spec, resolvefolder) {
-    var _a;
-    let msmeta = (_a = ctx.meta) === null || _a === void 0 ? void 0 : _a.multisource;
+    let msmeta = ctx.meta?.multisource;
     let base = resolvefolder(null == msmeta || null == msmeta.path ? popts.path : msmeta.path);
     let path = 'string' === typeof spec
         ? spec
         : null != spec.path
             ? '' + spec.path
             : undefined;
-    let abs = !!((path === null || path === void 0 ? void 0 : path.startsWith('/')) || (path === null || path === void 0 ? void 0 : path.startsWith('\\')));
+    let abs = !!(path?.startsWith('/') || path?.startsWith('\\'));
     let full = abs
         ? path
         : null != path && '' != path
@@ -189,7 +188,6 @@ function resolvePathSpec(popts, ctx, spec, resolvefolder) {
     };
     return res;
 }
-exports.resolvePathSpec = resolvePathSpec;
 // Plugin meta data
 const meta = {
     name: 'MultiSource',

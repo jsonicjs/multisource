@@ -15,6 +15,30 @@ Load partial values from multiple sources, such as other files.
 
 
 
+## Basic Example
+
+
+```yml
+# file: foo.jsonic
+a:1
+```
+
+```ts
+import { Jsonic } from '@jsonic/jsonic-next'
+import { MultiSource } from '@jsonic/multisource'
+import { makeFileResolver } from '@jsonic/multisource/resolver/file'
+
+let j = Jsonic.make().use(MultiSource, {
+  resolver: makeFileResolver(),
+})
+
+const out = j('@"foo.jsonic" b:2')
+// out === { a:1, b:2 }
+
+```
+
+
+
 <!--START:options-->
 ## Options
 * _implictExt_

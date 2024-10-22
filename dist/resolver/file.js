@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.makeFileResolver = void 0;
+exports.makeFileResolver = makeFileResolver;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const multisource_1 = require("../multisource");
@@ -39,7 +39,6 @@ function makeFileResolver(pathfinder) {
         return res;
     };
 }
-exports.makeFileResolver = makeFileResolver;
 function resolvefolder(path) {
     if ('string' !== typeof path) {
         return path;

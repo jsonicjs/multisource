@@ -1,7 +1,7 @@
 "use strict";
 /* Copyright (c) 2021 Richard Rodger, MIT License */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.makeJavaScriptProcessor = void 0;
+exports.makeJavaScriptProcessor = makeJavaScriptProcessor;
 function makeJavaScriptProcessor(opts) {
     const JavaScriptProcessor = (res) => {
         res.val = evaluate(res, opts);
@@ -9,7 +9,6 @@ function makeJavaScriptProcessor(opts) {
     JavaScriptProcessor.opts = opts;
     return JavaScriptProcessor;
 }
-exports.makeJavaScriptProcessor = makeJavaScriptProcessor;
 // TODO: too simplistic - handle more module cases
 function evaluate(res, _opts) {
     let out = undefined;

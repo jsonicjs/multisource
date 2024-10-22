@@ -61,9 +61,27 @@ function makePkgResolver(options: any): Resolver {
         search.push(...(requireOptions?.paths || (useRequire.resolve.paths(ps.path)
           .map((p: string) => Path.join(p, (ps.path as string))))))
 
-        let potentials =
-          buildPotentials(ps, popts, (...s) =>
-            Path.resolve(s.reduce((a, p) => Path.join(a, p))))
+        let potentials = []
+
+        if (ps.path && 'string' === typeof ps.path) {
+
+          // Add the main paths of the current require
+          potentials.push(...useRequire.main.paths.map((p: string) => p + ps.path))
+
+          // Remove module name prefix
+          const subpath = ps.path.replace(/^(@[^/]+\/)?[^/]+\//, '')
+          potentials.push(...useRequire.main.paths
+            .map((p: string) => p.replace(/node_modules$/, subpath))
+          )
+        }
+
+        potentials.push(
+          ...buildPotentials(ps, popts, (...s) =>
+            Path.resolve(s.reduce((a, p) => Path.join(a, p)))))
+
+        // Check longest paths first
+        potentials.sort((a, b) => b.length - a.length)
+
 
         for (let path of potentials) {
           try {

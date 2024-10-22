@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.makeMemResolver = exports.buildPotentials = void 0;
+exports.buildPotentials = buildPotentials;
+exports.makeMemResolver = makeMemResolver;
 const multisource_1 = require("../multisource");
 function makeMemResolver(filemap) {
     return function MemResolver(spec, popts, _rule, ctx) {
@@ -28,7 +29,6 @@ function makeMemResolver(filemap) {
         return res;
     };
 }
-exports.makeMemResolver = makeMemResolver;
 function makeresolvefolder(filemap) {
     return function resolvefolder(path) {
         let folder = path;
@@ -72,5 +72,4 @@ function buildPotentials(ps, popts, pathjoin) {
     // console.log('POT', potentials)
     return potentials;
 }
-exports.buildPotentials = buildPotentials;
 //# sourceMappingURL=mem.js.map

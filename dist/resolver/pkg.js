@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.makePkgResolver = void 0;
+exports.makePkgResolver = makePkgResolver;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const multisource_1 = require("../multisource");
@@ -39,9 +39,20 @@ function makePkgResolver(options) {
                 }
             }
             catch (me) {
-                search.push(...((requireOptions === null || requireOptions === void 0 ? void 0 : requireOptions.paths) || (useRequire.resolve.paths(ps.path)
+                search.push(...(requireOptions?.paths || (useRequire.resolve.paths(ps.path)
                     .map((p) => path_1.default.join(p, ps.path)))));
-                let potentials = (0, mem_1.buildPotentials)(ps, popts, (...s) => path_1.default.resolve(s.reduce((a, p) => path_1.default.join(a, p))));
+                let potentials = [];
+                if (ps.path && 'string' === typeof ps.path) {
+                    // Add the main paths of the current require
+                    potentials.push(...useRequire.main.paths.map((p) => p + ps.path));
+                    // Remove module name prefix
+                    const subpath = ps.path.replace(/^(@[^/]+\/)?[^/]+\//, '');
+                    potentials.push(...useRequire.main.paths
+                        .map((p) => p.replace(/node_modules$/, subpath)));
+                }
+                potentials.push(...(0, mem_1.buildPotentials)(ps, popts, (...s) => path_1.default.resolve(s.reduce((a, p) => path_1.default.join(a, p)))));
+                // Check longest paths first
+                potentials.sort((a, b) => b.length - a.length);
                 for (let path of potentials) {
                     try {
                         ps.full = useRequire.resolve(path, requireOptions);
@@ -52,7 +63,7 @@ function makePkgResolver(options) {
                         }
                     }
                     catch (me) {
-                        search.push(...((requireOptions === null || requireOptions === void 0 ? void 0 : requireOptions.paths) || (useRequire.resolve.paths(path)
+                        search.push(...(requireOptions?.paths || (useRequire.resolve.paths(path)
                             .map((p) => path_1.default.join(p, path)))));
                     }
                 }
@@ -67,7 +78,6 @@ function makePkgResolver(options) {
         return res;
     };
 }
-exports.makePkgResolver = makePkgResolver;
 function resolvefolder(path) {
     if ('string' !== typeof path) {
         return path;
