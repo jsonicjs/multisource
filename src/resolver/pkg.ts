@@ -63,10 +63,11 @@ function makePkgResolver(options: any): Resolver {
 
         let potentials = []
 
-        if (ps.path && 'string' === typeof ps.path) {
+        if (null != ps.path && 'string' === typeof ps.path) {
+          const pspath = ps.path
 
           // Add the main paths of the current require
-          potentials.push(...useRequire.main.paths.map((p: string) => p + ps.path))
+          potentials.push(...useRequire.main.paths.map((p: string) => Path.join(p, pspath)))
 
           // Remove module name prefix
           const subpath = ps.path.replace(/^(@[^/]+\/)?[^/]+\//, '')

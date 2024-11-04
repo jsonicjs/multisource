@@ -42,9 +42,10 @@ function makePkgResolver(options) {
                 search.push(...(requireOptions?.paths || (useRequire.resolve.paths(ps.path)
                     .map((p) => path_1.default.join(p, ps.path)))));
                 let potentials = [];
-                if (ps.path && 'string' === typeof ps.path) {
+                if (null != ps.path && 'string' === typeof ps.path) {
+                    const pspath = ps.path;
                     // Add the main paths of the current require
-                    potentials.push(...useRequire.main.paths.map((p) => p + ps.path));
+                    potentials.push(...useRequire.main.paths.map((p) => path_1.default.join(p, pspath)));
                     // Remove module name prefix
                     const subpath = ps.path.replace(/^(@[^/]+\/)?[^/]+\//, '');
                     potentials.push(...useRequire.main.paths
