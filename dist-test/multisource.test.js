@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const node_test_1 = require("node:test");
 const code_1 = require("@hapi/code");
-const jsonic_next_1 = require("@jsonic/jsonic-next");
+const jsonic_1 = require("jsonic");
 const multisource_1 = require("../dist/multisource");
 // import { makeJavaScriptProcessor } from '../dist/processor/js'
 const mem_1 = require("../dist/resolver/mem");
@@ -26,7 +26,7 @@ const path_1 = require("@jsonic/path");
             //   js: makeJavaScriptProcessor({ evalOnly: true }),
             // },
         };
-        const j = jsonic_next_1.Jsonic.make().use(multisource_1.MultiSource, o);
+        const j = jsonic_1.Jsonic.make().use(multisource_1.MultiSource, o);
         (0, code_1.expect)(j('a:@a.jsonic,x:1')).equal({ a: { a: 1 }, x: 1 });
         (0, code_1.expect)(j('b:@b.jsc,x:1')).equal({ b: { b: 2 }, x: 1 });
         (0, code_1.expect)(j('c:@c.txt,x:1')).equal({ c: 'CCC', x: 1 });
@@ -68,7 +68,7 @@ const path_1 = require("@jsonic/path");
                 'b.jsonic': 'a:{b:1,c:2}',
             }),
         };
-        const j = jsonic_next_1.Jsonic.make().use(multisource_1.MultiSource, o);
+        const j = jsonic_1.Jsonic.make().use(multisource_1.MultiSource, o);
         (0, code_1.expect)(j('a:@a.jsonic,x:1')).equal({ a: { a: 1 }, x: 1 });
         (0, code_1.expect)(j('[@a.jsonic,{x:1}]')).equal([{ a: 1 }, { x: 1 }]);
         (0, code_1.expect)(j('@a.jsonic')).equal({ a: 1 });
@@ -108,7 +108,7 @@ const path_1 = require("@jsonic/path");
                 'c/index.jsc': 'c:3',
             }),
         };
-        const j = jsonic_next_1.Jsonic.make().use(multisource_1.MultiSource, o);
+        const j = jsonic_1.Jsonic.make().use(multisource_1.MultiSource, o);
         (0, code_1.expect)(j('@a')).equal({ a: 1, b: { b: 2, c: { c: 3 } }, x: 99 });
         (0, code_1.expect)(j('@a', {})).equal({ a: 1, b: { b: 2, c: { c: 3 } }, x: 99 });
         (0, code_1.expect)(j('@a', { x: 1 })).equal({ a: 1, b: { b: 2, c: { c: 3 } }, x: 99 });
@@ -122,7 +122,7 @@ const path_1 = require("@jsonic/path");
         const o = {
             resolver: (0, mem_1.makeMemResolver)({}),
         };
-        const j = jsonic_next_1.Jsonic.make().use(multisource_1.MultiSource, o);
+        const j = jsonic_1.Jsonic.make().use(multisource_1.MultiSource, o);
         // j('x:@a')
         (0, code_1.expect)(() => j('x:@a')).throws(/multisource_not_found.*:1:3/s);
         (0, code_1.expect)(() => j('x:@a', { fileName: 'foo' })).throws(/foo:1:3/s);
@@ -131,7 +131,7 @@ const path_1 = require("@jsonic/path");
         const o = {
             resolver: (0, file_1.makeFileResolver)(),
         };
-        const j = jsonic_next_1.Jsonic.make().use(multisource_1.MultiSource, o);
+        const j = jsonic_1.Jsonic.make().use(multisource_1.MultiSource, o);
         (0, code_1.expect)(() => j('@../test/e02.jsonic', { multisource: { path: __dirname } })).throws(/e02\.jsonic:2:3/);
         let deps = {};
         try {
@@ -146,7 +146,7 @@ const path_1 = require("@jsonic/path");
         }
     });
     (0, node_test_1.test)('basic-file', () => {
-        let j0 = jsonic_next_1.Jsonic.make().use(multisource_1.MultiSource, {
+        let j0 = jsonic_1.Jsonic.make().use(multisource_1.MultiSource, {
             resolver: (0, file_1.makeFileResolver)(),
         });
         let deps = {};
@@ -167,7 +167,7 @@ const path_1 = require("@jsonic/path");
         })).equal({ a: 1, b: { d: 2, e: { f: 4 }, g: 9 }, c: 3 });
     });
     (0, node_test_1.test)('file-kind', () => {
-        let j0 = jsonic_next_1.Jsonic.make().use(multisource_1.MultiSource, {
+        let j0 = jsonic_1.Jsonic.make().use(multisource_1.MultiSource, {
             resolver: (0, file_1.makeFileResolver)(),
         });
         let deps = {};
@@ -193,7 +193,7 @@ const path_1 = require("@jsonic/path");
             //   js: makeJavaScriptProcessor({ evalOnly: true }),
             // },
         };
-        const j = jsonic_next_1.Jsonic.make()
+        const j = jsonic_1.Jsonic.make()
             .use(multisource_1.MultiSource, o)
             .use(path_1.Path)
             .use((jsonic) => {

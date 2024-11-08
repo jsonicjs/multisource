@@ -3,7 +3,7 @@
 import { test, describe } from 'node:test'
 import { expect } from '@hapi/code'
 
-import { Jsonic } from '@jsonic/jsonic-next'
+import { Jsonic } from 'jsonic'
 import { MultiSource, MultiSourceOptions } from '../dist/multisource'
 // import { makeJavaScriptProcessor } from '../dist/processor/js'
 import { makeMemResolver } from '../dist/resolver/mem'

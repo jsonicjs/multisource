@@ -1,6 +1,6 @@
 
 
-import { Rule, Context } from '@jsonic/jsonic-next'
+import { Rule, Context } from 'jsonic'
 
 import {
   MultiSourceOptions,

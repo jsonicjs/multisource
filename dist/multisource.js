@@ -3,9 +3,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.meta = exports.TOP = exports.NONE = exports.MultiSource = void 0;
 exports.resolvePathSpec = resolvePathSpec;
-const jsonic_next_1 = require("@jsonic/jsonic-next");
+const jsonic_1 = require("jsonic");
 const directive_1 = require("@jsonic/directive");
-const jsonic_1 = require("./processor/jsonic");
+const jsonic_2 = require("./processor/jsonic");
 const js_1 = require("./processor/js");
 // Unknown source reference file extension.
 const NONE = '';
@@ -143,12 +143,12 @@ function makeProcessor(process) {
 }
 // Default is just to insert file contents as a string.
 const defaultProcessor = makeProcessor((src) => src);
-const jsonicJsonParser = jsonic_next_1.Jsonic.make('json');
+const jsonicJsonParser = jsonic_1.Jsonic.make('json');
 // TODO: use json plugin to get better error msgs.
 const jsonProcessor = makeProcessor((src, res) => 
 // null == src ? undefined : JSON.parse(src)
 null == src ? undefined : jsonicJsonParser(src, { fileName: res.path }));
-const jsonicProcessor = (0, jsonic_1.makeJsonicProcessor)();
+const jsonicProcessor = (0, jsonic_2.makeJsonicProcessor)();
 const jsProcessor = (0, js_1.makeJavaScriptProcessor)();
 MultiSource.defaults = {
     markchar: '@',
