@@ -1,6 +1,6 @@
 {
   "name": "@jsonic/multisource",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "description": "",
   "main": "dist/multisource.js",
   "type": "commonjs",
@@ -55,7 +55,7 @@
   },
   "peerDependencies": {
     "@jsonic/path": ">=1.0.0",
-    "@jsonic/directive": ">=1.0.0",
+    "@jsonic/directive": ">=1.0.1",
     "jsonic": ">=2.15.2"
   }
 }

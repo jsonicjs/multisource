@@ -94,13 +94,13 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
 
   jsonic.options({
     error: {
-      multisource_not_found: 'source not found: $path',
+      multisource_not_found: 'source not found: {path}',
     },
     hint: {
       // TODO: use $details for more explanation in error message.
       // In particular to show resolved absolute path.
       multisource_not_found:
-        'The source path $path was not found.\n\nSearch paths:\n${searchstr}',
+        'The source path {path} was not found.\n\nSearch paths:\n{searchstr}',
     },
   })
 
