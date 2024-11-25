@@ -44,12 +44,11 @@ function makePkgResolver(options) {
                 //   .map((p: string) => Path.join(p, (ps.path as string))))))
                 let potentials = [];
                 let localpath = path_1.default.join(process.cwd(), 'NIL');
-                let localpaths = [];
                 let localparts;
                 do {
                     localparts = path_1.default.parse(localpath);
                     localpath = localparts.dir;
-                    localpaths.push(path_1.default.join(localpath, 'node_modules', ps.path));
+                    potentials.push(path_1.default.join(localpath, 'node_modules', ps.path));
                 } while (localparts.root !== localparts.dir);
                 if (null != ps.path && 'string' === typeof ps.path) {
                     const pspath = ps.path;

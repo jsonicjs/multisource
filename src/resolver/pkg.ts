@@ -65,12 +65,11 @@ function makePkgResolver(options: any): Resolver {
         let potentials = []
 
         let localpath = Path.join(process.cwd(), 'NIL')
-        let localpaths = []
         let localparts
         do {
           localparts = Path.parse(localpath)
           localpath = localparts.dir
-          localpaths.push(Path.join(localpath, 'node_modules', ps.path))
+          potentials.push(Path.join(localpath, 'node_modules', ps.path))
         }
         while (localparts.root !== localparts.dir)
 
