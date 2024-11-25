@@ -58,10 +58,22 @@ function makePkgResolver(options: any): Resolver {
         }
       }
       catch (me: any) {
-        search.push(...(requireOptions?.paths || (useRequire.resolve.paths(ps.path)
-          .map((p: string) => Path.join(p, (ps.path as string))))))
+        search.push(ps.path)
+        // search.push(...(requireOptions?.paths || (useRequire.resolve.paths(ps.path)
+        //   .map((p: string) => Path.join(p, (ps.path as string))))))
 
         let potentials = []
+
+        let localpath = Path.join(process.cwd(), 'NIL')
+        let localpaths = []
+        let localparts
+        do {
+          localparts = Path.parse(localpath)
+          localpath = localparts.dir
+          localpaths.push(Path.join(localpath, 'node_modules', ps.path))
+        }
+        while (localparts.root !== localparts.dir)
+
 
         if (null != ps.path && 'string' === typeof ps.path) {
           const pspath = ps.path
@@ -94,8 +106,9 @@ function makePkgResolver(options: any): Resolver {
             }
           }
           catch (me: any) {
-            search.push(...(requireOptions?.paths || (useRequire.resolve.paths(path)
-              .map((p: string) => Path.join(p, (path as string))))))
+            search.push(path)
+            // search.push(...(requireOptions?.paths || (useRequire.resolve.paths(path)
+            // .map((p: string) => Path.join(p, (path as string))))))
           }
         }
       }

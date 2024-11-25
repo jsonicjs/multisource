@@ -39,9 +39,18 @@ function makePkgResolver(options) {
                 }
             }
             catch (me) {
-                search.push(...(requireOptions?.paths || (useRequire.resolve.paths(ps.path)
-                    .map((p) => path_1.default.join(p, ps.path)))));
+                search.push(ps.path);
+                // search.push(...(requireOptions?.paths || (useRequire.resolve.paths(ps.path)
+                //   .map((p: string) => Path.join(p, (ps.path as string))))))
                 let potentials = [];
+                let localpath = path_1.default.join(process.cwd(), 'NIL');
+                let localpaths = [];
+                let localparts;
+                do {
+                    localparts = path_1.default.parse(localpath);
+                    localpath = localparts.dir;
+                    localpaths.push(path_1.default.join(localpath, 'node_modules', ps.path));
+                } while (localparts.root !== localparts.dir);
                 if (null != ps.path && 'string' === typeof ps.path) {
                     const pspath = ps.path;
                     // Add the main paths of the current require
@@ -64,8 +73,9 @@ function makePkgResolver(options) {
                         }
                     }
                     catch (me) {
-                        search.push(...(requireOptions?.paths || (useRequire.resolve.paths(path)
-                            .map((p) => path_1.default.join(p, path)))));
+                        search.push(path);
+                        // search.push(...(requireOptions?.paths || (useRequire.resolve.paths(path)
+                        // .map((p: string) => Path.join(p, (path as string))))))
                     }
                 }
             }
