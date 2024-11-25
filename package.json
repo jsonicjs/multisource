@@ -1,6 +1,6 @@
 {
   "name": "@jsonic/multisource",
-  "version": "1.7.1",
+  "version": "1.8.0",
   "description": "",
   "main": "dist/multisource.js",
   "type": "commonjs",
@@ -49,9 +49,9 @@
   "devDependencies": {
     "@hapi/code": "^9.0.3",
     "@jsonic/doc": "^0.0.9",
-    "@types/node": "^22.9.0",
+    "@types/node": "^22.9.3",
     "jsonic-multisource-pkg-test": "^0.0.1",
-    "typescript": "^5.6.3"
+    "typescript": "^5.7.2"
   },
   "peerDependencies": {
     "@jsonic/path": ">=1.0.0",
