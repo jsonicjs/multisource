@@ -1,9 +1,10 @@
-/* Copyright (c) 2021-2024 Richard Rodger and other contributors, MIT License */
+/* Copyright (c) 2021-2025 Richard Rodger and other contributors, MIT License */
 
 import { test, describe } from 'node:test'
 import { expect } from '@hapi/code'
 
 import { Jsonic } from 'jsonic'
+import { Debug } from 'jsonic/debug'
 import { MultiSource, MultiSourceOptions } from '../dist/multisource'
 // import { makeJavaScriptProcessor } from '../dist/processor/js'
 import { makeMemResolver } from '../dist/resolver/mem'
@@ -68,11 +69,44 @@ describe('multisource', () => {
     })
   })
 
+
+  test('pair-val', () => {
+    const o: MultiSourceOptions = {
+      resolver: makeMemResolver({
+        'a.jsonic': 'a:1',
+      }),
+    }
+    const j = Jsonic.make()
+      // .use(Debug, { trace: true })
+      .use(MultiSource, o)
+
+
+    expect(j('{x:@a.jsonic}')).equal({ x: { a: 1 } })
+    expect(j('x:@a.jsonic')).equal({ x: { a: 1 } })
+
+    expect(j('{x:@a.jsonic y:1}')).equal({ x: { a: 1 }, y: 1 })
+    expect(j('x:@a.jsonic y:1')).equal({ x: { a: 1 }, y: 1 })
+
+    expect(j('{z:2 x:@a.jsonic y:1}')).equal({ z: 2, x: { a: 1 }, y: 1 })
+    expect(j('z:2 x:@a.jsonic y:1')).equal({ z: 2, x: { a: 1 }, y: 1 })
+
+    expect(j('{x:y:@a.jsonic}')).equal({ x: { y: { a: 1 } } })
+    expect(j('x:y:@a.jsonic')).equal({ x: { y: { a: 1 } } })
+
+    expect(j('{x:y:2 @a.jsonic}')).equal({ x: { y: 2 }, a: 1 })
+    expect(j('x:y:2 @a.jsonic')).equal({ x: { y: 2 }, a: 1 })
+
+    expect(j('x:2 @a.jsonic')).equal({ x: 2, a: 1 })
+  })
+
+
+
   test('implicit', () => {
     const o: MultiSourceOptions = {
       resolver: makeMemResolver({
         'a.jsonic': 'a:1',
         'b.jsonic': 'a:{b:1,c:2}',
+        'd.jsonic': 'd:3',
       }),
     }
     const j = Jsonic.make().use(MultiSource, o)
@@ -112,6 +146,34 @@ describe('multisource', () => {
       a: { b: 1, c: 2, d: 4, f: 5 },
       z: 1,
     })
+
+    expect(j('@a.jsonic @d.jsonic')).equal({
+      a: 1,
+      d: 3,
+    })
+
+    expect(j('x:11 @a.jsonic @d.jsonic')).equal({
+      x: 11,
+      a: 1,
+      d: 3,
+    })
+    expect(j('@a.jsonic x:11 @d.jsonic')).equal({
+      x: 11,
+      a: 1,
+      d: 3,
+    })
+
+    expect(j('x:{} @a.jsonic @d.jsonic')).equal({
+      x: {},
+      a: 1,
+      d: 3,
+    })
+    expect(j('x:y:{} @a.jsonic @d.jsonic')).equal({
+      x: { y: {} },
+      a: 1,
+      d: 3,
+    })
+
   })
 
   test('deps', () => {

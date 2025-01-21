@@ -1,5 +1,5 @@
 "use strict";
-/* Copyright (c) 2021-2024 Richard Rodger and other contributors, MIT License */
+/* Copyright (c) 2021-2025 Richard Rodger and other contributors, MIT License */
 Object.defineProperty(exports, "__esModule", { value: true });
 const node_test_1 = require("node:test");
 const code_1 = require("@hapi/code");
@@ -61,11 +61,33 @@ const path_1 = require("@jsonic/path");
             y: 1,
         });
     });
+    (0, node_test_1.test)('pair-val', () => {
+        const o = {
+            resolver: (0, mem_1.makeMemResolver)({
+                'a.jsonic': 'a:1',
+            }),
+        };
+        const j = jsonic_1.Jsonic.make()
+            // .use(Debug, { trace: true })
+            .use(multisource_1.MultiSource, o);
+        (0, code_1.expect)(j('{x:@a.jsonic}')).equal({ x: { a: 1 } });
+        (0, code_1.expect)(j('x:@a.jsonic')).equal({ x: { a: 1 } });
+        (0, code_1.expect)(j('{x:@a.jsonic y:1}')).equal({ x: { a: 1 }, y: 1 });
+        (0, code_1.expect)(j('x:@a.jsonic y:1')).equal({ x: { a: 1 }, y: 1 });
+        (0, code_1.expect)(j('{z:2 x:@a.jsonic y:1}')).equal({ z: 2, x: { a: 1 }, y: 1 });
+        (0, code_1.expect)(j('z:2 x:@a.jsonic y:1')).equal({ z: 2, x: { a: 1 }, y: 1 });
+        (0, code_1.expect)(j('{x:y:@a.jsonic}')).equal({ x: { y: { a: 1 } } });
+        (0, code_1.expect)(j('x:y:@a.jsonic')).equal({ x: { y: { a: 1 } } });
+        (0, code_1.expect)(j('{x:y:2 @a.jsonic}')).equal({ x: { y: 2 }, a: 1 });
+        (0, code_1.expect)(j('x:y:2 @a.jsonic')).equal({ x: { y: 2 }, a: 1 });
+        (0, code_1.expect)(j('x:2 @a.jsonic')).equal({ x: 2, a: 1 });
+    });
     (0, node_test_1.test)('implicit', () => {
         const o = {
             resolver: (0, mem_1.makeMemResolver)({
                 'a.jsonic': 'a:1',
                 'b.jsonic': 'a:{b:1,c:2}',
+                'd.jsonic': 'd:3',
             }),
         };
         const j = jsonic_1.Jsonic.make().use(multisource_1.MultiSource, o);
@@ -98,6 +120,30 @@ const path_1 = require("@jsonic/path");
         (0, code_1.expect)(j('@b.jsonic a:{d:4,f:5} z:1')).equal({
             a: { b: 1, c: 2, d: 4, f: 5 },
             z: 1,
+        });
+        (0, code_1.expect)(j('@a.jsonic @d.jsonic')).equal({
+            a: 1,
+            d: 3,
+        });
+        (0, code_1.expect)(j('x:11 @a.jsonic @d.jsonic')).equal({
+            x: 11,
+            a: 1,
+            d: 3,
+        });
+        (0, code_1.expect)(j('@a.jsonic x:11 @d.jsonic')).equal({
+            x: 11,
+            a: 1,
+            d: 3,
+        });
+        (0, code_1.expect)(j('x:{} @a.jsonic @d.jsonic')).equal({
+            x: {},
+            a: 1,
+            d: 3,
+        });
+        (0, code_1.expect)(j('x:y:{} @a.jsonic @d.jsonic')).equal({
+            x: { y: {} },
+            a: 1,
+            d: 3,
         });
     });
     (0, node_test_1.test)('deps', () => {

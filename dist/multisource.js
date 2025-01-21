@@ -39,14 +39,17 @@ const MultiSource = (jsonic, popts) => {
         name: 'multisource',
         open: markchar,
         rules: {
-            open: 'val,pair',
+            open: {
+                val: {},
+                pair: {
+                    c: (r) => r.lte('pk')
+                },
+            }
         },
         action: function multisourceStateAction(rule, ctx) {
             let from = rule.parent.name;
             let spec = rule.child.node;
-            // console.log('SRC', from, spec)
             let res = resolver(spec, popts, rule, ctx, jsonic);
-            // console.log('RES', res)
             if (null == res || !res.found) {
                 return rule.parent?.o0.bad('multisource_not_found', {
                     ...(res || {}),
@@ -116,13 +119,22 @@ const MultiSource = (jsonic, popts) => {
         custom: (jsonic, { OPEN, name }) => {
             // Handle special case of @foo first token - assume a map
             jsonic.rule('val', (rs) => {
-                rs.open({
-                    s: [OPEN],
-                    c: (r) => 0 === r.d,
-                    p: 'map',
-                    b: 1,
-                    n: { [name + '_top']: 1 },
-                });
+                rs.open([
+                    {
+                        s: [OPEN],
+                        c: (r) => 0 < r.n.pk && 'pair' != r.parent.name,
+                        b: 1,
+                        g: name + '_undive',
+                    },
+                    ,
+                    {
+                        s: [OPEN],
+                        c: (r) => 0 === r.d,
+                        p: 'map',
+                        b: 1,
+                        n: { [name + '_top']: 1 },
+                    }
+                ]);
             });
             jsonic.rule('map', (rs) => {
                 rs.open({
@@ -130,6 +142,19 @@ const MultiSource = (jsonic, popts) => {
                     c: (r) => 1 === r.d && 1 === r.n[name + '_top'],
                     p: 'pair',
                     b: 1,
+                }).close({
+                    s: [OPEN],
+                    c: (r) => 0 < r.n.pk,
+                    b: 1,
+                    g: name + '_undive',
+                });
+            });
+            jsonic.rule('pair', (rs) => {
+                rs.close({
+                    s: [OPEN],
+                    c: (r) => 0 < r.n.pk,
+                    b: 1,
+                    g: name + '_undive',
                 });
             });
         },
