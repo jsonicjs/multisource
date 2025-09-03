@@ -70,12 +70,10 @@ function makePkgResolver(options) {
                 potentials.push(...(0, mem_1.buildPotentials)(ps, popts, (...s) => node_path_1.default.resolve(s.reduce((a, p) => node_path_1.default.join(a, p)))));
                 // Check longest paths first
                 potentials.sort((a, b) => b.length - a.length);
-                console.log('POT', potentials);
                 requireOptions = { paths: ['/'] };
                 for (let path of potentials) {
                     try {
                         ps.full = useRequire.resolve(path, requireOptions);
-                        console.log('REQ', path, ps);
                         if (null != ps.full) {
                             src = load(ps.full, fs);
                             ps.kind = (ps.full.match(/\.([^.]*)$/) || [multisource_1.NONE, multisource_1.NONE])[1];
@@ -83,7 +81,6 @@ function makePkgResolver(options) {
                         }
                     }
                     catch (me) {
-                        console.log(me);
                         search.push(path);
                         // search.push(...(requireOptions?.paths || (useRequire.resolve.paths(path)
                         // .map((p: string) => Path.join(p, (path as string))))))

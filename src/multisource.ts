@@ -181,7 +181,6 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
       }
 
       let proc = processor[res.kind] || processor[NONE]
-      // console.log('FROM', from, 'PROC', proc, processor, ctxproc.meta)
       proc(res, popts, rule, ctxproc, jsonic)
 
       // Handle the {@foo} case, injecting keys into parent map.

@@ -118,14 +118,11 @@ function makePkgResolver(options: {
         potentials.sort((a, b) => b.length - a.length)
 
 
-        console.log('POT', potentials)
-
         requireOptions = { paths: ['/'] }
 
         for (let path of potentials) {
           try {
             ps.full = useRequire.resolve(path, requireOptions)
-            console.log('REQ', path, ps)
             if (null != ps.full) {
               src = load(ps.full, fs)
               ps.kind = (ps.full.match(/\.([^.]*)$/) || [NONE, NONE])[1]
@@ -133,7 +130,6 @@ function makePkgResolver(options: {
             }
           }
           catch (me: any) {
-            console.log(me)
             search.push(path)
             // search.push(...(requireOptions?.paths || (useRequire.resolve.paths(path)
             // .map((p: string) => Path.join(p, (path as string))))))

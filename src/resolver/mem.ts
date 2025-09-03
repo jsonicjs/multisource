@@ -61,9 +61,7 @@ function makeresolvefolder(filemap: { [fullpath: string]: string }) {
       folder = (path
         .replace(/[\\\/]+$/, '')
         .match(/[\\\/]+([^\\\/]+)$/) || ['', ''])[1]
-      // console.log('PF', path, folder)
     }
-    // console.log('RF', folder)
     return folder
   }
 }
@@ -102,8 +100,6 @@ function buildPotentials(
       }
     }
   }
-
-  // console.log('POT', potentials)
 
   return potentials
 }

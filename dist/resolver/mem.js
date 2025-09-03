@@ -36,9 +36,7 @@ function makeresolvefolder(filemap) {
             folder = (path
                 .replace(/[\\\/]+$/, '')
                 .match(/[\\\/]+([^\\\/]+)$/) || ['', ''])[1];
-            // console.log('PF', path, folder)
         }
-        // console.log('RF', folder)
         return folder;
     };
 }
@@ -69,7 +67,6 @@ function buildPotentials(ps, popts, pathjoin) {
             }
         }
     }
-    // console.log('POT', potentials)
     return potentials;
 }
 //# sourceMappingURL=mem.js.map
