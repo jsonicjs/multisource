@@ -1,5 +1,10 @@
-import Fs from 'fs'
+
+import * as SystemFs from 'node:fs'
 import Path from 'path'
+
+import type {
+  FST
+} from '../multisource'
 
 import { Rule, Context } from 'jsonic'
 
@@ -27,9 +32,10 @@ function makeFileResolver(pathfinder?: PathFinder): Resolver {
     _rule: Rule,
     ctx: Context,
   ): Resolution {
-    let foundSpec = pathfinder ? pathfinder(spec) : spec
+    const fs = ctx.meta?.fs || SystemFs
+    const foundSpec = pathfinder ? pathfinder(spec) : spec
 
-    let ps = resolvePathSpec(popts, ctx, foundSpec, resolvefolder)
+    const ps = resolvePathSpec(popts, ctx, foundSpec, resolvefolder)
     let src = undefined
 
     let search: string[] = []
@@ -38,7 +44,7 @@ function makeFileResolver(pathfinder?: PathFinder): Resolver {
       ps.full = Path.resolve(ps.full)
 
       search.push(ps.full)
-      src = load(ps.full)
+      src = load(ps.full, fs)
 
       if (null == src && NONE === ps.kind) {
         let potentials =
@@ -47,7 +53,7 @@ function makeFileResolver(pathfinder?: PathFinder): Resolver {
         search.push(...potentials)
 
         for (let path of potentials) {
-          if (null != (src = load(path))) {
+          if (null != (src = load(path, fs))) {
             ps.full = path
             ps.kind = (path.match(/\.([^.]*)$/) || [NONE, NONE])[1]
             break
@@ -67,13 +73,13 @@ function makeFileResolver(pathfinder?: PathFinder): Resolver {
   }
 }
 
-function resolvefolder(path: string) {
+function resolvefolder(path: string, fs: FST) {
   if ('string' !== typeof path) {
     return path
   }
 
   let folder = path
-  let pathstats = Fs.statSync(path)
+  let pathstats = fs.statSync(path)
 
   if (pathstats.isFile()) {
     let pathdesc = Path.parse(path)
@@ -85,9 +91,9 @@ function resolvefolder(path: string) {
 
 
 // TODO: in multisource.ts, generate an error token if cannot resolve
-function load(path: string) {
+function load(path: string, fs: FST) {
   try {
-    return Fs.readFileSync(path).toString()
+    return fs.readFileSync(path).toString()
   }
   catch (e) {
     // NOTE: don't need this, as in all cases, we consider failed

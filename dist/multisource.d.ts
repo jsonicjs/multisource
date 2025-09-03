@@ -1,4 +1,6 @@
+import * as SystemFs from 'node:fs';
 import { Jsonic, Context, Rule, Plugin } from 'jsonic';
+type FST = typeof SystemFs;
 interface MultiSourceMeta {
     path?: string;
     parents?: string[];
@@ -41,9 +43,9 @@ type DependencyMap = {
 };
 declare const TOP: unique symbol;
 declare const MultiSource: Plugin;
-declare function resolvePathSpec(popts: MultiSourceOptions, ctx: Context, spec: any, resolvefolder: (path: string) => string): PathSpec;
+declare function resolvePathSpec(popts: MultiSourceOptions, ctx: Context, spec: any, resolvefolder: (path: string, fs: FST) => string): PathSpec;
 declare const meta: {
     name: string;
 };
-export type { Resolver, Resolution, Processor, MultiSourceOptions, Dependency, DependencyMap, MultiSourceMeta, PathSpec, };
+export type { Resolver, Resolution, Processor, MultiSourceOptions, Dependency, DependencyMap, MultiSourceMeta, PathSpec, FST, };
 export { MultiSource, resolvePathSpec, NONE, TOP, meta };

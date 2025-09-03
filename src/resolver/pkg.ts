@@ -1,5 +1,11 @@
-import Fs from 'fs'
-import Path from 'path'
+import SystemFs from 'node:fs'
+import Path from 'node:path'
+// import Module from 'node:module'
+
+import type {
+  FST
+} from '../multisource'
+
 
 import { Rule, Context } from 'jsonic'
 
@@ -17,12 +23,20 @@ import {
 } from './mem'
 
 
-function makePkgResolver(options: any): Resolver {
-  let useRequire: any = require
+function makePkgResolver(options: {
+  require: Function | string | string[]
+}): Resolver {
+  let useRequire: {
+    resolve: (target: string, options?: any) => any
+    main: {
+      paths: string[]
+    }
+  } = require as any
+
   let requireOptions: any = undefined
 
   if ('function' === typeof options.require) {
-    useRequire = options.require
+    useRequire = options.require as any
   }
   else if (Array.isArray(options.require)) {
     requireOptions = {
@@ -41,7 +55,12 @@ function makePkgResolver(options: any): Resolver {
     _rule: Rule,
     ctx: Context,
   ): Resolution {
+    let fs = SystemFs
+
     // TODO: support pathfinder as file.ts
+
+    // TODO: support virtual fs
+    // const base = ctx.meta?.multisource?.path ?? ctx.meta?.path
 
     let foundSpec = spec
 
@@ -53,7 +72,7 @@ function makePkgResolver(options: any): Resolver {
       try {
         ps.full = useRequire.resolve(ps.path, requireOptions)
         if (null != ps.full) {
-          src = load(ps.full)
+          src = load(ps.full, fs)
           ps.kind = (ps.full.match(/\.([^.]*)$/) || [NONE, NONE])[1]
         }
       }
@@ -64,15 +83,19 @@ function makePkgResolver(options: any): Resolver {
 
         let potentials = []
 
-        let localpath = Path.join(process.cwd(), 'NIL')
-        let localparts
-        do {
-          localparts = Path.parse(localpath)
-          localpath = localparts.dir
-          potentials.push(Path.join(localpath, 'node_modules', ps.path))
+        if (null == ctx.meta?.fs) {
+          let localpath = Path.join(process.cwd(), 'NIL')
+          let localparts
+          do {
+            localparts = Path.parse(localpath)
+            localpath = localparts.dir
+            potentials.push(Path.join(localpath, 'node_modules', ps.path))
+          }
+          while (localparts.root !== localparts.dir)
         }
-        while (localparts.root !== localparts.dir)
-
+        else {
+          potentials.push(ps.path)
+        }
 
         if (null != ps.path && 'string' === typeof ps.path) {
           const pspath = ps.path
@@ -95,16 +118,22 @@ function makePkgResolver(options: any): Resolver {
         potentials.sort((a, b) => b.length - a.length)
 
 
+        console.log('POT', potentials)
+
+        requireOptions = { paths: ['/'] }
+
         for (let path of potentials) {
           try {
             ps.full = useRequire.resolve(path, requireOptions)
+            console.log('REQ', path, ps)
             if (null != ps.full) {
-              src = load(ps.full)
+              src = load(ps.full, fs)
               ps.kind = (ps.full.match(/\.([^.]*)$/) || [NONE, NONE])[1]
               break
             }
           }
           catch (me: any) {
+            console.log(me)
             search.push(path)
             // search.push(...(requireOptions?.paths || (useRequire.resolve.paths(path)
             // .map((p: string) => Path.join(p, (path as string))))))
@@ -125,13 +154,13 @@ function makePkgResolver(options: any): Resolver {
 }
 
 
-function resolvefolder(path: string) {
+function resolvefolder(path: string, fs: FST) {
   if ('string' !== typeof path) {
     return path
   }
 
   let folder = path
-  let pathstats = Fs.statSync(path)
+  let pathstats = fs.statSync(path)
 
   if (pathstats.isFile()) {
     let pathdesc = Path.parse(path)
@@ -143,15 +172,16 @@ function resolvefolder(path: string) {
 
 
 // TODO: in multisource.ts, generate an error token if cannot resolve
-function load(path: string) {
+function load(path: string, fs: FST) {
   try {
-    return Fs.readFileSync(path).toString()
+    return fs.readFileSync(path).toString()
   }
   catch (e) {
     // NOTE: don't need this, as in all cases, we consider failed
     // reads to indicate non-existence.
   }
 }
+
 
 
 export {

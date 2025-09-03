@@ -3,11 +3,13 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const node_test_1 = require("node:test");
 const code_1 = require("@hapi/code");
+const memfs_1 = require("memfs");
 const jsonic_1 = require("jsonic");
 const multisource_1 = require("../dist/multisource");
 // import { makeJavaScriptProcessor } from '../dist/processor/js'
 const mem_1 = require("../dist/resolver/mem");
 const file_1 = require("../dist/resolver/file");
+const pkg_1 = require("../dist/resolver/pkg");
 const path_1 = require("@jsonic/path");
 (0, node_test_1.describe)('multisource', () => {
     (0, node_test_1.test)('happy', () => {
@@ -264,6 +266,39 @@ const path_1 = require("@jsonic/path");
                 },
             },
         });
+    });
+    (0, node_test_1.test)('memfs', () => {
+        const j0 = jsonic_1.Jsonic.make()
+            .use(multisource_1.MultiSource, {
+            resolver: (0, file_1.makeFileResolver)()
+        });
+        const { fs, vol } = (0, memfs_1.memfs)({
+            'b.jsonic': '2',
+            node_modules: {
+                foo: {
+                    'c.jsonic': '3'
+                }
+            }
+        });
+        //      ; (fs as any).ISMEM = true
+        (0, code_1.expect)(j0('a:1 b:@"/b.jsonic"', { fs })).equal({
+            a: 1, b: 2
+        });
+        (0, code_1.expect)(j0('a:1 b:@"b.jsonic"', { fs, multisource: { path: '/' } })).equal({
+            a: 1, b: 2
+        });
+        const j1 = jsonic_1.Jsonic.make()
+            .use(multisource_1.MultiSource, {
+            resolver: (0, pkg_1.makePkgResolver)({ require })
+        });
+        (0, code_1.expect)(j1('a:1 c:@"jsonic-multisource-pkg-test/zed.jsonic"', { fs, multisource: { path: '/' } }))
+            .equal({
+            a: 1, c: { zed: 99 }
+        });
+        // TODO: implement require over virtual fs
+        // expect(j1('a:1 c:@"foo/c.jsonic"', { fs, multisource: { path: '/' } })).equal({
+        //   a: 1, c: 3
+        // })
     });
 });
 //# sourceMappingURL=multisource.test.js.map

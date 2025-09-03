@@ -3,12 +3,15 @@
 import { test, describe } from 'node:test'
 import { expect } from '@hapi/code'
 
+import { memfs } from 'memfs'
+
 import { Jsonic } from 'jsonic'
 import { Debug } from 'jsonic/debug'
 import { MultiSource, MultiSourceOptions } from '../dist/multisource'
 // import { makeJavaScriptProcessor } from '../dist/processor/js'
 import { makeMemResolver } from '../dist/resolver/mem'
 import { makeFileResolver } from '../dist/resolver/file'
+import { makePkgResolver } from '../dist/resolver/pkg'
 import { Path } from '@jsonic/path'
 
 
@@ -360,4 +363,49 @@ describe('multisource', () => {
       },
     })
   })
+
+
+  test('memfs', () => {
+    const j0 = Jsonic.make()
+      .use(MultiSource, {
+        resolver: makeFileResolver()
+      })
+
+    const { fs, vol } = memfs({
+      'b.jsonic': '2',
+      node_modules: {
+        foo: {
+          'c.jsonic': '3'
+        }
+      }
+    })
+
+    //      ; (fs as any).ISMEM = true
+
+    expect(j0('a:1 b:@"/b.jsonic"', { fs })).equal({
+      a: 1, b: 2
+    })
+
+    expect(j0('a:1 b:@"b.jsonic"', { fs, multisource: { path: '/' } })).equal({
+      a: 1, b: 2
+    })
+
+
+    const j1 = Jsonic.make()
+      .use(MultiSource, {
+        resolver: makePkgResolver({ require })
+      })
+
+    expect(j1('a:1 c:@"jsonic-multisource-pkg-test/zed.jsonic"',
+      { fs, multisource: { path: '/' } }))
+      .equal({
+        a: 1, c: { zed: 99 }
+      })
+
+    // TODO: implement require over virtual fs
+    // expect(j1('a:1 c:@"foo/c.jsonic"', { fs, multisource: { path: '/' } })).equal({
+    //   a: 1, c: 3
+    // })
+  })
+
 })

@@ -1,10 +1,14 @@
-/* Copyright (c) 2021 Richard Rodger, MIT License */
+/* Copyright (c) 2025 Richard Rodger, MIT License */
+
+import * as SystemFs from 'node:fs'
 
 import { Jsonic, Context, Rule, Plugin } from 'jsonic'
 import { Directive, DirectiveOptions } from '@jsonic/directive'
 
 import { makeJsonicProcessor } from './processor/jsonic'
 import { makeJavaScriptProcessor } from './processor/js'
+
+type FST = typeof SystemFs
 
 // TODO: jsonic-cli should provide basepath
 
@@ -288,11 +292,13 @@ function resolvePathSpec(
   popts: MultiSourceOptions,
   ctx: Context,
   spec: any,
-  resolvefolder: (path: string) => string,
+  resolvefolder: (path: string, fs: FST) => string,
 ): PathSpec {
+  const fs = ctx.meta?.fs || SystemFs
   let msmeta = ctx.meta?.multisource
   let base = resolvefolder(
     null == msmeta || null == msmeta.path ? popts.path : msmeta.path,
+    fs
   )
 
   let path =
@@ -339,6 +345,8 @@ export type {
   DependencyMap,
   MultiSourceMeta,
   PathSpec,
+  FST,
 }
 
 export { MultiSource, resolvePathSpec, NONE, TOP, meta }
+

@@ -4,8 +4,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.makePkgResolver = makePkgResolver;
-const fs_1 = __importDefault(require("fs"));
-const path_1 = __importDefault(require("path"));
+const node_fs_1 = __importDefault(require("node:fs"));
+const node_path_1 = __importDefault(require("node:path"));
 const multisource_1 = require("../multisource");
 const mem_1 = require("./mem");
 function makePkgResolver(options) {
@@ -25,7 +25,10 @@ function makePkgResolver(options) {
         };
     }
     return function PkgResolver(spec, popts, _rule, ctx) {
+        let fs = node_fs_1.default;
         // TODO: support pathfinder as file.ts
+        // TODO: support virtual fs
+        // const base = ctx.meta?.multisource?.path ?? ctx.meta?.path
         let foundSpec = spec;
         let ps = (0, multisource_1.resolvePathSpec)(popts, ctx, foundSpec, resolvefolder);
         let src = undefined;
@@ -34,7 +37,7 @@ function makePkgResolver(options) {
             try {
                 ps.full = useRequire.resolve(ps.path, requireOptions);
                 if (null != ps.full) {
-                    src = load(ps.full);
+                    src = load(ps.full, fs);
                     ps.kind = (ps.full.match(/\.([^.]*)$/) || [multisource_1.NONE, multisource_1.NONE])[1];
                 }
             }
@@ -43,35 +46,44 @@ function makePkgResolver(options) {
                 // search.push(...(requireOptions?.paths || (useRequire.resolve.paths(ps.path)
                 //   .map((p: string) => Path.join(p, (ps.path as string))))))
                 let potentials = [];
-                let localpath = path_1.default.join(process.cwd(), 'NIL');
-                let localparts;
-                do {
-                    localparts = path_1.default.parse(localpath);
-                    localpath = localparts.dir;
-                    potentials.push(path_1.default.join(localpath, 'node_modules', ps.path));
-                } while (localparts.root !== localparts.dir);
+                if (null == ctx.meta?.fs) {
+                    let localpath = node_path_1.default.join(process.cwd(), 'NIL');
+                    let localparts;
+                    do {
+                        localparts = node_path_1.default.parse(localpath);
+                        localpath = localparts.dir;
+                        potentials.push(node_path_1.default.join(localpath, 'node_modules', ps.path));
+                    } while (localparts.root !== localparts.dir);
+                }
+                else {
+                    potentials.push(ps.path);
+                }
                 if (null != ps.path && 'string' === typeof ps.path) {
                     const pspath = ps.path;
                     // Add the main paths of the current require
-                    potentials.push(...useRequire.main.paths.map((p) => path_1.default.join(p, pspath)));
+                    potentials.push(...useRequire.main.paths.map((p) => node_path_1.default.join(p, pspath)));
                     // Remove module name prefix
                     const subpath = ps.path.replace(/^(@[^/]+\/)?[^/]+\//, '');
                     potentials.push(...useRequire.main.paths
                         .map((p) => p.replace(/node_modules$/, subpath)));
                 }
-                potentials.push(...(0, mem_1.buildPotentials)(ps, popts, (...s) => path_1.default.resolve(s.reduce((a, p) => path_1.default.join(a, p)))));
+                potentials.push(...(0, mem_1.buildPotentials)(ps, popts, (...s) => node_path_1.default.resolve(s.reduce((a, p) => node_path_1.default.join(a, p)))));
                 // Check longest paths first
                 potentials.sort((a, b) => b.length - a.length);
+                console.log('POT', potentials);
+                requireOptions = { paths: ['/'] };
                 for (let path of potentials) {
                     try {
                         ps.full = useRequire.resolve(path, requireOptions);
+                        console.log('REQ', path, ps);
                         if (null != ps.full) {
-                            src = load(ps.full);
+                            src = load(ps.full, fs);
                             ps.kind = (ps.full.match(/\.([^.]*)$/) || [multisource_1.NONE, multisource_1.NONE])[1];
                             break;
                         }
                     }
                     catch (me) {
+                        console.log(me);
                         search.push(path);
                         // search.push(...(requireOptions?.paths || (useRequire.resolve.paths(path)
                         // .map((p: string) => Path.join(p, (path as string))))))
@@ -88,22 +100,22 @@ function makePkgResolver(options) {
         return res;
     };
 }
-function resolvefolder(path) {
+function resolvefolder(path, fs) {
     if ('string' !== typeof path) {
         return path;
     }
     let folder = path;
-    let pathstats = fs_1.default.statSync(path);
+    let pathstats = fs.statSync(path);
     if (pathstats.isFile()) {
-        let pathdesc = path_1.default.parse(path);
+        let pathdesc = node_path_1.default.parse(path);
         folder = pathdesc.dir;
     }
     return folder;
 }
 // TODO: in multisource.ts, generate an error token if cannot resolve
-function load(path) {
+function load(path, fs) {
     try {
-        return fs_1.default.readFileSync(path).toString();
+        return fs.readFileSync(path).toString();
     }
     catch (e) {
         // NOTE: don't need this, as in all cases, we consider failed
