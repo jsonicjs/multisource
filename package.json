@@ -1,6 +1,6 @@
 {
   "name": "@jsonic/multisource",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "",
   "main": "dist/multisource.js",
   "type": "commonjs",
@@ -48,14 +48,14 @@
   "devDependencies": {
     "@hapi/code": "^9.0.3",
     "@jsonic/doc": "^0.0.9",
-    "@types/node": "^24.3.0",
+    "@types/node": "^24.9.1",
     "jsonic-multisource-pkg-test": "^0.0.1",
-    "memfs": "^4.38.2",
-    "typescript": "^5.9.2"
+    "memfs": "^4.49.0",
+    "typescript": "^5.9.3"
   },
   "peerDependencies": {
-    "@jsonic/directive": ">=1.1.0",
-    "@jsonic/path": ">=1.4.0",
-    "jsonic": ">=2.16.0"
+    "@jsonic/directive": ">=1",
+    "@jsonic/path": ">=1",
+    "jsonic": ">=2"
   }
 }
