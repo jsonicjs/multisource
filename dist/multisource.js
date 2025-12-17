@@ -129,7 +129,8 @@ const MultiSource = (jsonic, popts) => {
                 ...ctx,
                 meta,
             };
-            let proc = processor[res.kind] || processor[NONE];
+            // let proc = processor[res.kind] || processor[NONE]
+            let proc = getProcessor(res.kind, processor);
             proc(res, popts, rule, ctxproc, jsonic);
             // Handle the {@foo} case, injecting keys into parent map.
             if ('pair' === from) {
@@ -146,7 +147,6 @@ const MultiSource = (jsonic, popts) => {
             else {
                 rule.node = res.val;
             }
-            // rule.node = res.val
             return undefined;
         },
         custom: (jsonic, { OPEN, name }) => {
@@ -206,6 +206,19 @@ const jsonicJsonParser = jsonic_1.Jsonic.make('json');
 const jsonProcessor = makeProcessor((src, res) => 
 // null == src ? undefined : JSON.parse(src)
 null == src ? undefined : jsonicJsonParser(src, { fileName: res.path }));
+// let proc = processor[res.kind] || processor[NONE]
+function getProcessor(kind, procmap) {
+    let proc = procmap[NONE];
+    let procref = procmap[kind];
+    // Allow one level of aliasing
+    if ('string' === typeof procref) {
+        proc = procmap[procref];
+    }
+    else if ('function' === typeof procref) {
+        proc = procref;
+    }
+    return proc;
+}
 const jsonicProcessor = (0, jsonic_2.makeJsonicProcessor)();
 const jsProcessor = (0, js_1.makeJavaScriptProcessor)();
 MultiSource.defaults = {

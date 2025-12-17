@@ -232,6 +232,16 @@ const path_1 = require("@jsonic/path");
         deps = {};
         (0, code_1.expect)(j0('@"../test/k04.jsc"', { multisource: { path: __dirname, deps } })).equal({ a: 1, b: { c: 2 }, d: { e: 3 }, f: { g: 4 } });
     });
+    (0, node_test_1.test)('custom-ext', () => {
+        let j0 = jsonic_1.Jsonic.make().use(multisource_1.MultiSource, {
+            resolver: (0, file_1.makeFileResolver)(),
+            processor: {
+                foo: 'jsonic'
+            }
+        });
+        let deps = {};
+        (0, code_1.expect)(j0('@"../test/t04.foo"', { multisource: { path: __dirname, deps } })).equal({ a: 1 });
+    });
     (0, node_test_1.test)('path', () => {
         const o = {
             resolver: (0, mem_1.makeMemResolver)({

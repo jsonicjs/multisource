@@ -327,6 +327,22 @@ describe('multisource', () => {
     ).equal({ a: 1, b: { c: 2 }, d: { e: 3 }, f: { g: 4 } })
   })
 
+
+  test('custom-ext', () => {
+    let j0 = Jsonic.make().use(MultiSource, {
+      resolver: makeFileResolver(),
+      processor: {
+        foo: 'jsonic'
+      }
+    })
+
+    let deps = {}
+    expect(
+      j0('@"../test/t04.foo"', { multisource: { path: __dirname, deps } }),
+    ).equal({ a: 1 })
+  })
+
+
   test('path', () => {
     const o: MultiSourceOptions = {
       resolver: makeMemResolver({

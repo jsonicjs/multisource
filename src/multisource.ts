@@ -180,7 +180,8 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
         meta,
       }
 
-      let proc = processor[res.kind] || processor[NONE]
+      // let proc = processor[res.kind] || processor[NONE]
+      let proc = getProcessor(res.kind, processor)
       proc(res, popts, rule, ctxproc, jsonic)
 
       // Handle the {@foo} case, injecting keys into parent map.
@@ -192,16 +193,17 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
             rule,
             ctx,
           )
-        } else if (ctx.cfg.map.extend) {
+        }
+        else if (ctx.cfg.map.extend) {
           rule.parent.parent.node = deep(rule.parent.parent.node, res.val)
-        } else {
+        }
+        else {
           Object.assign(rule.parent.node, res.val)
         }
-      } else {
+      }
+      else {
         rule.node = res.val
       }
-
-      // rule.node = res.val
 
       return undefined
     },
@@ -271,6 +273,24 @@ const jsonProcessor = makeProcessor((src: string, res: Resolution) =>
   // null == src ? undefined : JSON.parse(src)
   null == src ? undefined : jsonicJsonParser(src, { fileName: res.path }),
 )
+
+
+// let proc = processor[res.kind] || processor[NONE]
+function getProcessor(kind: string, procmap: Record<string, Processor>): Processor {
+  let proc: Processor = procmap[NONE]
+  let procref = procmap[kind]
+
+  // Allow one level of aliasing
+  if ('string' === typeof procref) {
+    proc = procmap[procref]
+  }
+  else if ('function' === typeof procref) {
+    proc = procref
+  }
+
+  return proc
+}
+
 
 const jsonicProcessor = makeJsonicProcessor()
 const jsProcessor = makeJavaScriptProcessor()
