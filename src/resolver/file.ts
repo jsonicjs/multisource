@@ -46,10 +46,23 @@ function makeFileResolver(pathfinder?: PathFinder): Resolver {
       search.push(ps.full)
       src = load(ps.full, fs)
 
-      if (null == src && NONE === ps.kind) {
-        let potentials =
-          buildPotentials(ps, popts, (...s) =>
-            Path.resolve(s.reduce((a, p) => Path.join(a, p))))
+      if (null == src) {
+        const potentials: string[] = []
+
+        // Special case: support npm linked references
+        if (null != ps.base && null != ps.path) {
+          potentials.push(
+            Path.resolve(ps.base, 'node_modules', ps.path),
+            Path.resolve(Path.dirname(ps.base), 'node_modules', ps.path)
+          )
+        }
+
+        if (NONE === ps.kind) {
+          potentials.push(...
+            buildPotentials(ps, popts, (...s) =>
+              Path.resolve(s.reduce((a, p) => Path.join(a, p)))))
+        }
+
         search.push(...potentials)
 
         for (let path of potentials) {
