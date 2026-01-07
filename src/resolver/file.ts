@@ -51,10 +51,14 @@ function makeFileResolver(pathfinder?: PathFinder): Resolver {
 
         // Special case: support npm linked references
         if (null != ps.base && null != ps.path) {
-          potentials.push(
-            Path.resolve(ps.base, 'node_modules', ps.path),
-            Path.resolve(Path.dirname(ps.base), 'node_modules', ps.path)
-          )
+          let base = ps.base
+          let last
+          for (let i = 0; i < 7; i++) { // Heuristically check 7 levels of folders
+            potentials.push(Path.resolve(base, 'node_modules', ps.path))
+            base = Path.dirname(base)
+            if (last === base) break
+            last = base
+          }
         }
 
         if (NONE === ps.kind) {

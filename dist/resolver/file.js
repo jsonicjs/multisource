@@ -56,7 +56,15 @@ function makeFileResolver(pathfinder) {
                 const potentials = [];
                 // Special case: support npm linked references
                 if (null != ps.base && null != ps.path) {
-                    potentials.push(path_1.default.resolve(ps.base, 'node_modules', ps.path), path_1.default.resolve(path_1.default.dirname(ps.base), 'node_modules', ps.path));
+                    let base = ps.base;
+                    let last;
+                    for (let i = 0; i < 7; i++) { // Heuristically check 7 levels of folders
+                        potentials.push(path_1.default.resolve(base, 'node_modules', ps.path));
+                        base = path_1.default.dirname(base);
+                        if (last === base)
+                            break;
+                        last = base;
+                    }
                 }
                 if (multisource_1.NONE === ps.kind) {
                     potentials.push(...(0, mem_1.buildPotentials)(ps, popts, (...s) => path_1.default.resolve(s.reduce((a, p) => path_1.default.join(a, p)))));
