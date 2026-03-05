@@ -55,12 +55,9 @@ function makePkgResolver(options: {
     _rule: Rule,
     ctx: Context,
   ): Resolution {
-    let fs = SystemFs
+    let fs: FST = ctx.meta?.fs || SystemFs
 
     // TODO: support pathfinder as file.ts
-
-    // TODO: support virtual fs
-    // const base = ctx.meta?.multisource?.path ?? ctx.meta?.path
 
     let foundSpec = spec
 
@@ -72,7 +69,7 @@ function makePkgResolver(options: {
       try {
         ps.full = useRequire.resolve(ps.path, requireOptions)
         if (null != ps.full) {
-          src = load(ps.full, fs)
+          src = load(ps.full, SystemFs)
           ps.kind = (ps.full.match(/\.([^.]*)$/) || [NONE, NONE])[1]
         }
       }
@@ -124,15 +121,27 @@ function makePkgResolver(options: {
           try {
             ps.full = useRequire.resolve(path, requireOptions)
             if (null != ps.full) {
-              src = load(ps.full, fs)
+              src = load(ps.full, SystemFs)
               ps.kind = (ps.full.match(/\.([^.]*)$/) || [NONE, NONE])[1]
               break
             }
           }
           catch (me: any) {
+            // require.resolve failed — try the filesystem directly.
+            // .jsonic files are text, not JS modules, so require.resolve
+            // isn't needed; and it can't see virtual filesystems at all.
+            try {
+              if (fs.existsSync(path)) {
+                ps.full = path
+                src = load(ps.full, fs)
+                if (null != src) {
+                  ps.kind = (path.match(/\.([^.]*)$/) || [NONE, NONE])[1]
+                  break
+                }
+              }
+            }
+            catch (_e) { /* fall through */ }
             search.push(path)
-            // search.push(...(requireOptions?.paths || (useRequire.resolve.paths(path)
-            // .map((p: string) => Path.join(p, (path as string))))))
           }
         }
       }

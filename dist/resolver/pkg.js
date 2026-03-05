@@ -25,10 +25,8 @@ function makePkgResolver(options) {
         };
     }
     return function PkgResolver(spec, popts, _rule, ctx) {
-        let fs = node_fs_1.default;
+        let fs = ctx.meta?.fs || node_fs_1.default;
         // TODO: support pathfinder as file.ts
-        // TODO: support virtual fs
-        // const base = ctx.meta?.multisource?.path ?? ctx.meta?.path
         let foundSpec = spec;
         let ps = (0, multisource_1.resolvePathSpec)(popts, ctx, foundSpec, resolvefolder);
         let src = undefined;
@@ -37,7 +35,7 @@ function makePkgResolver(options) {
             try {
                 ps.full = useRequire.resolve(ps.path, requireOptions);
                 if (null != ps.full) {
-                    src = load(ps.full, fs);
+                    src = load(ps.full, node_fs_1.default);
                     ps.kind = (ps.full.match(/\.([^.]*)$/) || [multisource_1.NONE, multisource_1.NONE])[1];
                 }
             }
@@ -75,15 +73,27 @@ function makePkgResolver(options) {
                     try {
                         ps.full = useRequire.resolve(path, requireOptions);
                         if (null != ps.full) {
-                            src = load(ps.full, fs);
+                            src = load(ps.full, node_fs_1.default);
                             ps.kind = (ps.full.match(/\.([^.]*)$/) || [multisource_1.NONE, multisource_1.NONE])[1];
                             break;
                         }
                     }
                     catch (me) {
+                        // require.resolve failed — try the filesystem directly.
+                        // .jsonic files are text, not JS modules, so require.resolve
+                        // isn't needed; and it can't see virtual filesystems at all.
+                        try {
+                            if (fs.existsSync(path)) {
+                                ps.full = path;
+                                src = load(ps.full, fs);
+                                if (null != src) {
+                                    ps.kind = (path.match(/\.([^.]*)$/) || [multisource_1.NONE, multisource_1.NONE])[1];
+                                    break;
+                                }
+                            }
+                        }
+                        catch (_e) { /* fall through */ }
                         search.push(path);
-                        // search.push(...(requireOptions?.paths || (useRequire.resolve.paths(path)
-                        // .map((p: string) => Path.join(p, (path as string))))))
                     }
                 }
             }
