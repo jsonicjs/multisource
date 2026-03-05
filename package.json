@@ -1,6 +1,6 @@
 {
   "name": "@jsonic/multisource",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "description": "",
   "main": "dist/multisource.js",
   "type": "commonjs",
