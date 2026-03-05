@@ -66,7 +66,7 @@ export function buildPotentials(
   let full = (ps.full as string)
   let potentials: string[] = []
   let implictExt: string[] = popts.implictExt || []
-  let hasExt = full.match(implictExt.join('|') + '$')
+  let hasExt = implictExt.some(ext => full.endsWith(ext))
 
   // TODO: use Jsonic.util.escre
   if (!hasExt) {
