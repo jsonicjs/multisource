@@ -1,7 +1,8 @@
 "use strict";
+/* Copyright (c) 2021-2025 Richard Rodger and other contributors, MIT License */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.buildPotentials = buildPotentials;
 exports.makeMemResolver = makeMemResolver;
+exports.buildPotentials = buildPotentials;
 const multisource_1 = require("../multisource");
 function makeMemResolver(filemap) {
     return function MemResolver(spec, popts, _rule, ctx) {

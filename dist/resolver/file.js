@@ -1,4 +1,5 @@
 "use strict";
+/* Copyright (c) 2021-2025 Richard Rodger and other contributors, MIT License */
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -32,13 +33,10 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.makeFileResolver = makeFileResolver;
 const SystemFs = __importStar(require("node:fs"));
-const path_1 = __importDefault(require("path"));
+const Path = __importStar(require("node:path"));
 const multisource_1 = require("../multisource");
 const mem_1 = require("./mem");
 function makeFileResolver(pathfinder) {
@@ -49,7 +47,7 @@ function makeFileResolver(pathfinder) {
         let src = undefined;
         let search = [];
         if (null != ps.full) {
-            ps.full = path_1.default.resolve(ps.full);
+            ps.full = Path.resolve(ps.full);
             search.push(ps.full);
             src = load(ps.full, fs);
             if (null == src) {
@@ -59,15 +57,15 @@ function makeFileResolver(pathfinder) {
                     let base = ps.base;
                     let last;
                     for (let i = 0; i < 7; i++) { // Heuristically check 7 levels of folders
-                        potentials.push(path_1.default.resolve(base, 'node_modules', ps.path));
-                        base = path_1.default.dirname(base);
+                        potentials.push(Path.resolve(base, 'node_modules', ps.path));
+                        base = Path.dirname(base);
                         if (last === base)
                             break;
                         last = base;
                     }
                 }
                 if (multisource_1.NONE === ps.kind) {
-                    potentials.push(...(0, mem_1.buildPotentials)(ps, popts, (...s) => path_1.default.resolve(s.reduce((a, p) => path_1.default.join(a, p)))));
+                    potentials.push(...(0, mem_1.buildPotentials)(ps, popts, (...s) => Path.resolve(s.reduce((a, p) => Path.join(a, p)))));
                 }
                 search.push(...potentials);
                 for (let path of potentials) {
@@ -95,12 +93,11 @@ function resolvefolder(path, fs) {
     let folder = path;
     let pathstats = fs.statSync(path);
     if (pathstats.isFile()) {
-        let pathdesc = path_1.default.parse(path);
+        let pathdesc = Path.parse(path);
         folder = pathdesc.dir;
     }
     return folder;
 }
-// TODO: in multisource.ts, generate an error token if cannot resolve
 function load(path, fs) {
     try {
         return fs.readFileSync(path).toString();

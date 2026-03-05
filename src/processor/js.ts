@@ -1,13 +1,9 @@
 /* Copyright (c) 2021 Richard Rodger, MIT License */
 
-
-import {
-  Processor,
-  Resolution,
-} from '../multisource'
+import { Processor, Resolution } from '../multisource'
 
 
-function makeJavaScriptProcessor(opts?: {
+export function makeJavaScriptProcessor(opts?: {
   // evalOnly?: boolean
 }): Processor {
 
@@ -36,8 +32,4 @@ function evaluate(res: Resolution, _opts?: any) {
   //   out = module.exports
   // }
   return out
-}
-
-export {
-  makeJavaScriptProcessor
 }

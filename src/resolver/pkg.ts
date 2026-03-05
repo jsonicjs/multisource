@@ -1,29 +1,13 @@
-import SystemFs from 'node:fs'
-import Path from 'node:path'
-// import Module from 'node:module'
+/* Copyright (c) 2021-2025 Richard Rodger and other contributors, MIT License */
 
-import type {
-  FST
-} from '../multisource'
-
-
+import * as SystemFs from 'node:fs'
+import * as Path from 'node:path'
+import { type FST, MultiSourceOptions, Resolver, Resolution, resolvePathSpec, NONE } from '../multisource'
 import { Rule, Context } from 'jsonic'
-
-import {
-  MultiSourceOptions,
-  Resolver,
-  Resolution,
-  resolvePathSpec,
-  NONE,
-} from '../multisource'
+import { buildPotentials } from './mem'
 
 
-import {
-  buildPotentials
-} from './mem'
-
-
-function makePkgResolver(options: {
+export function makePkgResolver(options: {
   require: Function | string | string[]
 }): Resolver {
   let useRequire: {
@@ -55,12 +39,9 @@ function makePkgResolver(options: {
     _rule: Rule,
     ctx: Context,
   ): Resolution {
-    let fs = SystemFs
+    let fs: FST = ctx.meta?.fs || SystemFs
 
     // TODO: support pathfinder as file.ts
-
-    // TODO: support virtual fs
-    // const base = ctx.meta?.multisource?.path ?? ctx.meta?.path
 
     let foundSpec = spec
 
@@ -72,14 +53,12 @@ function makePkgResolver(options: {
       try {
         ps.full = useRequire.resolve(ps.path, requireOptions)
         if (null != ps.full) {
-          src = load(ps.full, fs)
+          src = load(ps.full, SystemFs)
           ps.kind = (ps.full.match(/\.([^.]*)$/) || [NONE, NONE])[1]
         }
       }
       catch (me: any) {
         search.push(ps.path)
-        // search.push(...(requireOptions?.paths || (useRequire.resolve.paths(ps.path)
-        //   .map((p: string) => Path.join(p, (ps.path as string))))))
 
         let potentials = []
 
@@ -124,15 +103,27 @@ function makePkgResolver(options: {
           try {
             ps.full = useRequire.resolve(path, requireOptions)
             if (null != ps.full) {
-              src = load(ps.full, fs)
+              src = load(ps.full, SystemFs)
               ps.kind = (ps.full.match(/\.([^.]*)$/) || [NONE, NONE])[1]
               break
             }
           }
           catch (me: any) {
+            // require.resolve failed — try the filesystem directly.
+            // .jsonic files are text, not JS modules, so require.resolve
+            // isn't needed; and it can't see virtual filesystems at all.
+            try {
+              if (fs.existsSync(path)) {
+                ps.full = path
+                src = load(ps.full, fs)
+                if (null != src) {
+                  ps.kind = (path.match(/\.([^.]*)$/) || [NONE, NONE])[1]
+                  break
+                }
+              }
+            }
+            catch (_e) { /* fall through */ }
             search.push(path)
-            // search.push(...(requireOptions?.paths || (useRequire.resolve.paths(path)
-            // .map((p: string) => Path.join(p, (path as string))))))
           }
         }
       }
@@ -166,8 +157,6 @@ function resolvefolder(path: string, fs: FST) {
   return folder
 }
 
-
-// TODO: in multisource.ts, generate an error token if cannot resolve
 function load(path: string, fs: FST) {
   try {
     return fs.readFileSync(path).toString()
@@ -176,10 +165,4 @@ function load(path: string, fs: FST) {
     // NOTE: don't need this, as in all cases, we consider failed
     // reads to indicate non-existence.
   }
-}
-
-
-
-export {
-  makePkgResolver,
 }

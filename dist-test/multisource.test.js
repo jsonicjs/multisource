@@ -310,5 +310,170 @@ const path_1 = require("@jsonic/path");
         //   a: 1, c: 3
         // })
     });
+    (0, node_test_1.test)('pkg-require-array', () => {
+        const j1 = jsonic_1.Jsonic.make()
+            .use(multisource_1.MultiSource, {
+            resolver: (0, pkg_1.makePkgResolver)({
+                require: [__dirname + '/..']
+            })
+        });
+        (0, code_1.expect)(j1('a:1 c:@"jsonic-multisource-pkg-test/zed.jsonic"', { multisource: { path: '/' } }))
+            .equal({ a: 1, c: { zed: 99 } });
+    });
+    (0, node_test_1.test)('pkg-require-string', () => {
+        const j1 = jsonic_1.Jsonic.make()
+            .use(multisource_1.MultiSource, {
+            resolver: (0, pkg_1.makePkgResolver)({
+                require: __dirname + '/..'
+            })
+        });
+        (0, code_1.expect)(j1('a:1 c:@"jsonic-multisource-pkg-test/zed.jsonic"', { multisource: { path: '/' } }))
+            .equal({ a: 1, c: { zed: 99 } });
+    });
+    (0, node_test_1.test)('pkg-virtual-fs-fallback', () => {
+        const { fs } = (0, memfs_1.memfs)({
+            'data.jsonic': 'data:42',
+        });
+        const j1 = jsonic_1.Jsonic.make()
+            .use(multisource_1.MultiSource, {
+            resolver: (0, pkg_1.makePkgResolver)({ require })
+        });
+        (0, code_1.expect)(j1('a:1 d:@"/data.jsonic"', { fs, multisource: { path: '/' } }))
+            .equal({ a: 1, d: { data: 42 } });
+    });
+    (0, node_test_1.test)('pkg-no-path', () => {
+        const j1 = jsonic_1.Jsonic.make()
+            .use(multisource_1.MultiSource, {
+            resolver: (0, pkg_1.makePkgResolver)({ require })
+        });
+        (0, code_1.expect)(j1('z:@"jsonic-multisource-pkg-test"'))
+            .equal({ z: 11 });
+    });
+    (0, node_test_1.test)('pkg-resolvefolder-file', () => {
+        const j1 = jsonic_1.Jsonic.make()
+            .use(multisource_1.MultiSource, {
+            resolver: (0, pkg_1.makePkgResolver)({ require })
+        });
+        // multisource path is a file, not a directory - tests resolvefolder isFile branch
+        const filePath = __dirname + '/../package.json';
+        (0, code_1.expect)(j1('z:@"jsonic-multisource-pkg-test/zed.jsonic"', { multisource: { path: filePath } }))
+            .equal({ z: { zed: 99 } });
+    });
+    (0, node_test_1.test)('pkg-fs-error', () => {
+        const brokenFs = {
+            existsSync: () => { throw new Error('broken'); },
+            readFileSync: () => Buffer.from(''),
+            statSync: () => ({ isFile: () => false }),
+        };
+        const j1 = jsonic_1.Jsonic.make()
+            .use(multisource_1.MultiSource, {
+            resolver: (0, pkg_1.makePkgResolver)({ require })
+        });
+        (0, code_1.expect)(() => j1('x:@"/nonexistent.jsonic"', { fs: brokenFs, multisource: { path: '/' } }))
+            .throws(/not_found/);
+    });
+    (0, node_test_1.test)('pkg-load-failure', () => {
+        const errorFs = {
+            existsSync: (p) => p.endsWith('/data.jsonic'),
+            readFileSync: () => { throw new Error('read error'); },
+            statSync: () => ({ isFile: () => false }),
+        };
+        const j1 = jsonic_1.Jsonic.make()
+            .use(multisource_1.MultiSource, {
+            resolver: (0, pkg_1.makePkgResolver)({ require })
+        });
+        // existsSync returns true but readFileSync throws - covers load catch
+        (0, code_1.expect)(() => j1('x:@"/data.jsonic"', { fs: errorFs, multisource: { path: '/' } }))
+            .throws(/not_found/);
+    });
+    (0, node_test_1.test)('pkg-node-modules-walk', () => {
+        const j1 = jsonic_1.Jsonic.make()
+            .use(multisource_1.MultiSource, {
+            resolver: (0, pkg_1.makePkgResolver)({
+                require: ['/nonexistent']
+            })
+        });
+        // Initial require.resolve fails with bad paths,
+        // then node_modules walk (no virtual fs) finds the package
+        (0, code_1.expect)(j1('z:@"jsonic-multisource-pkg-test/zed.jsonic"', { multisource: { path: process.cwd() } }))
+            .equal({ z: { zed: 99 } });
+    });
+    (0, node_test_1.test)('file-implicit', () => {
+        let j0 = jsonic_1.Jsonic.make().use(multisource_1.MultiSource, {
+            resolver: (0, file_1.makeFileResolver)(),
+        });
+        // File without extension - found via implicit extension and potentials loop
+        (0, code_1.expect)(j0('a:1,b:@"t01"', { multisource: { path: process.cwd() + '/test' } })).equal({ a: 1, b: { c: 2 } });
+    });
+    (0, node_test_1.test)('file-pathfinder', () => {
+        let j0 = jsonic_1.Jsonic.make().use(multisource_1.MultiSource, {
+            resolver: (0, file_1.makeFileResolver)((spec) => {
+                return '../test/' + spec;
+            }),
+        });
+        (0, code_1.expect)(j0('b:@"t01.jsonic"', { multisource: { path: __dirname } })).equal({ b: { c: 2 } });
+    });
+    (0, node_test_1.test)('spec-object', () => {
+        const o = {
+            resolver: (0, mem_1.makeMemResolver)({
+                'a.jsonic': 'a:1',
+            }),
+        };
+        const j = jsonic_1.Jsonic.make().use(multisource_1.MultiSource, o);
+        // spec as object with path property - covers resolvePathSpec spec.path branch
+        (0, code_1.expect)(j('x:@{path:"a.jsonic"}')).equal({ x: { a: 1 } });
+    });
+    (0, node_test_1.test)('merge', () => {
+        const o = {
+            resolver: (0, mem_1.makeMemResolver)({
+                'a.jsonic': 'a:1',
+            }),
+        };
+        const j = jsonic_1.Jsonic.make()
+            .use(multisource_1.MultiSource, o);
+        j.options({
+            map: {
+                merge: (prev, curr) => Object.assign({}, prev, curr)
+            }
+        });
+        (0, code_1.expect)(j('x:2 @a.jsonic')).equal({ x: 2, a: 1 });
+    });
+    (0, node_test_1.test)('assign', () => {
+        const o = {
+            resolver: (0, mem_1.makeMemResolver)({
+                'a.jsonic': 'a:1',
+            }),
+        };
+        const j = jsonic_1.Jsonic.make()
+            .use(multisource_1.MultiSource, o);
+        j.options({
+            map: {
+                extend: false
+            }
+        });
+        (0, code_1.expect)(j('x:2 @a.jsonic')).equal({ x: 2, a: 1 });
+    });
+    (0, node_test_1.test)('js-default-export', () => {
+        let j0 = jsonic_1.Jsonic.make().use(multisource_1.MultiSource, {
+            resolver: (0, file_1.makeFileResolver)(),
+        });
+        // JS module with exports.default - tests the out.default branch in js.ts
+        let deps = {};
+        (0, code_1.expect)(j0('a:1,d:@"../test/k05.js"', { multisource: { path: __dirname, deps } })).equal({ a: 1, d: { f: 5 } });
+    });
+    (0, node_test_1.test)('jsonic-null-src', () => {
+        const o = {
+            resolver: (_spec, _popts, _rule, _ctx) => ({
+                kind: 'jsonic',
+                abs: false,
+                found: true,
+                src: undefined,
+                full: undefined,
+            }),
+        };
+        const j = jsonic_1.Jsonic.make().use(multisource_1.MultiSource, o);
+        // Covers the null src/full guard in jsonic processor
+        (0, code_1.expect)(j('x:@"foo"')).equal({ x: null });
+    });
 });
 //# sourceMappingURL=multisource.test.js.map

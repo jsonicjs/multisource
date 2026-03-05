@@ -1,3 +1,2 @@
 import { Processor } from '../multisource';
-declare function makeJavaScriptProcessor(opts?: {}): Processor;
-export { makeJavaScriptProcessor };
+export declare function makeJavaScriptProcessor(opts?: {}): Processor;
