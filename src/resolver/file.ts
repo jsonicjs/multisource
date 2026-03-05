@@ -1,30 +1,15 @@
+/* Copyright (c) 2021-2025 Richard Rodger and other contributors, MIT License */
 
 import * as SystemFs from 'node:fs'
-import Path from 'path'
-
-import type {
-  FST
-} from '../multisource'
-
+import * as Path from 'node:path'
+import { type FST, MultiSourceOptions, Resolver, Resolution, resolvePathSpec, NONE } from '../multisource'
 import { Rule, Context } from 'jsonic'
-
-import {
-  MultiSourceOptions,
-  Resolver,
-  Resolution,
-  resolvePathSpec,
-  NONE,
-} from '../multisource'
-
-
-import {
-  buildPotentials
-} from './mem'
+import { buildPotentials } from './mem'
 
 
 type PathFinder = (spec: any) => string
 
-function makeFileResolver(pathfinder?: PathFinder): Resolver {
+export function makeFileResolver(pathfinder?: PathFinder): Resolver {
 
   return function FileResolver(
     spec: any,
@@ -106,8 +91,6 @@ function resolvefolder(path: string, fs: FST) {
   return folder
 }
 
-
-// TODO: in multisource.ts, generate an error token if cannot resolve
 function load(path: string, fs: FST) {
   try {
     return fs.readFileSync(path).toString()
@@ -116,9 +99,4 @@ function load(path: string, fs: FST) {
     // NOTE: don't need this, as in all cases, we consider failed
     // reads to indicate non-existence.
   }
-}
-
-
-export {
-  makeFileResolver,
 }

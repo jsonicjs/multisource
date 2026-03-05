@@ -1,16 +1,10 @@
 /* Copyright (c) 2021-2023 Richard Rodger, MIT License */
 
-
 import { Jsonic, Rule, Context } from 'jsonic'
-
-import {
-  MultiSourceOptions,
-  Processor,
-  Resolution,
-} from '../multisource'
+import { MultiSourceOptions, Processor, Resolution } from '../multisource'
 
 
-function makeJsonicProcessor(): Processor {
+export function makeJsonicProcessor(): Processor {
 
   return function JsonicProcessor(
     res: Resolution,
@@ -23,10 +17,4 @@ function makeJsonicProcessor(): Processor {
       res.val = jsonic(res.src, ctx.meta)
     }
   }
-}
-
-
-
-export {
-  makeJsonicProcessor
 }

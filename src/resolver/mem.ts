@@ -1,18 +1,10 @@
-
+/* Copyright (c) 2021-2025 Richard Rodger and other contributors, MIT License */
 
 import { Rule, Context } from 'jsonic'
-
-import {
-  MultiSourceOptions,
-  Resolver,
-  Resolution,
-  resolvePathSpec,
-  NONE,
-  PathSpec,
-} from '../multisource'
+import { MultiSourceOptions, Resolver, Resolution, resolvePathSpec, NONE, PathSpec } from '../multisource'
 
 
-function makeMemResolver(filemap: { [fullpath: string]: string }): Resolver {
+export function makeMemResolver(filemap: { [fullpath: string]: string }): Resolver {
 
   return function MemResolver(
     spec: any,
@@ -67,7 +59,7 @@ function makeresolvefolder(filemap: { [fullpath: string]: string }) {
 }
 
 
-function buildPotentials(
+export function buildPotentials(
   ps: PathSpec,
   popts: MultiSourceOptions,
   pathjoin: (...parts: string[]) => string): string[] {
@@ -102,11 +94,4 @@ function buildPotentials(
   }
 
   return potentials
-}
-
-
-
-export {
-  buildPotentials,
-  makeMemResolver,
 }

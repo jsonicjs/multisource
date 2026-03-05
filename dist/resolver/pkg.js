@@ -1,11 +1,42 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
+/* Copyright (c) 2021-2025 Richard Rodger and other contributors, MIT License */
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.makePkgResolver = makePkgResolver;
-const node_fs_1 = __importDefault(require("node:fs"));
-const node_path_1 = __importDefault(require("node:path"));
+const SystemFs = __importStar(require("node:fs"));
+const Path = __importStar(require("node:path"));
 const multisource_1 = require("../multisource");
 const mem_1 = require("./mem");
 function makePkgResolver(options) {
@@ -25,7 +56,7 @@ function makePkgResolver(options) {
         };
     }
     return function PkgResolver(spec, popts, _rule, ctx) {
-        let fs = ctx.meta?.fs || node_fs_1.default;
+        let fs = ctx.meta?.fs || SystemFs;
         // TODO: support pathfinder as file.ts
         let foundSpec = spec;
         let ps = (0, multisource_1.resolvePathSpec)(popts, ctx, foundSpec, resolvefolder);
@@ -35,22 +66,20 @@ function makePkgResolver(options) {
             try {
                 ps.full = useRequire.resolve(ps.path, requireOptions);
                 if (null != ps.full) {
-                    src = load(ps.full, node_fs_1.default);
+                    src = load(ps.full, SystemFs);
                     ps.kind = (ps.full.match(/\.([^.]*)$/) || [multisource_1.NONE, multisource_1.NONE])[1];
                 }
             }
             catch (me) {
                 search.push(ps.path);
-                // search.push(...(requireOptions?.paths || (useRequire.resolve.paths(ps.path)
-                //   .map((p: string) => Path.join(p, (ps.path as string))))))
                 let potentials = [];
                 if (null == ctx.meta?.fs) {
-                    let localpath = node_path_1.default.join(process.cwd(), 'NIL');
+                    let localpath = Path.join(process.cwd(), 'NIL');
                     let localparts;
                     do {
-                        localparts = node_path_1.default.parse(localpath);
+                        localparts = Path.parse(localpath);
                         localpath = localparts.dir;
-                        potentials.push(node_path_1.default.join(localpath, 'node_modules', ps.path));
+                        potentials.push(Path.join(localpath, 'node_modules', ps.path));
                     } while (localparts.root !== localparts.dir);
                 }
                 else {
@@ -59,13 +88,13 @@ function makePkgResolver(options) {
                 if (null != ps.path && 'string' === typeof ps.path) {
                     const pspath = ps.path;
                     // Add the main paths of the current require
-                    potentials.push(...useRequire.main.paths.map((p) => node_path_1.default.join(p, pspath)));
+                    potentials.push(...useRequire.main.paths.map((p) => Path.join(p, pspath)));
                     // Remove module name prefix
                     const subpath = ps.path.replace(/^(@[^/]+\/)?[^/]+\//, '');
                     potentials.push(...useRequire.main.paths
                         .map((p) => p.replace(/node_modules$/, subpath)));
                 }
-                potentials.push(...(0, mem_1.buildPotentials)(ps, popts, (...s) => node_path_1.default.resolve(s.reduce((a, p) => node_path_1.default.join(a, p)))));
+                potentials.push(...(0, mem_1.buildPotentials)(ps, popts, (...s) => Path.resolve(s.reduce((a, p) => Path.join(a, p)))));
                 // Check longest paths first
                 potentials.sort((a, b) => b.length - a.length);
                 requireOptions = { paths: ['/'] };
@@ -73,7 +102,7 @@ function makePkgResolver(options) {
                     try {
                         ps.full = useRequire.resolve(path, requireOptions);
                         if (null != ps.full) {
-                            src = load(ps.full, node_fs_1.default);
+                            src = load(ps.full, SystemFs);
                             ps.kind = (ps.full.match(/\.([^.]*)$/) || [multisource_1.NONE, multisource_1.NONE])[1];
                             break;
                         }
@@ -114,12 +143,11 @@ function resolvefolder(path, fs) {
     let folder = path;
     let pathstats = fs.statSync(path);
     if (pathstats.isFile()) {
-        let pathdesc = node_path_1.default.parse(path);
+        let pathdesc = Path.parse(path);
         folder = pathdesc.dir;
     }
     return folder;
 }
-// TODO: in multisource.ts, generate an error token if cannot resolve
 function load(path, fs) {
     try {
         return fs.readFileSync(path).toString();

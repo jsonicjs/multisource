@@ -1,29 +1,13 @@
-import SystemFs from 'node:fs'
-import Path from 'node:path'
-// import Module from 'node:module'
+/* Copyright (c) 2021-2025 Richard Rodger and other contributors, MIT License */
 
-import type {
-  FST
-} from '../multisource'
-
-
+import * as SystemFs from 'node:fs'
+import * as Path from 'node:path'
+import { type FST, MultiSourceOptions, Resolver, Resolution, resolvePathSpec, NONE } from '../multisource'
 import { Rule, Context } from 'jsonic'
-
-import {
-  MultiSourceOptions,
-  Resolver,
-  Resolution,
-  resolvePathSpec,
-  NONE,
-} from '../multisource'
+import { buildPotentials } from './mem'
 
 
-import {
-  buildPotentials
-} from './mem'
-
-
-function makePkgResolver(options: {
+export function makePkgResolver(options: {
   require: Function | string | string[]
 }): Resolver {
   let useRequire: {
@@ -75,8 +59,6 @@ function makePkgResolver(options: {
       }
       catch (me: any) {
         search.push(ps.path)
-        // search.push(...(requireOptions?.paths || (useRequire.resolve.paths(ps.path)
-        //   .map((p: string) => Path.join(p, (ps.path as string))))))
 
         let potentials = []
 
@@ -175,8 +157,6 @@ function resolvefolder(path: string, fs: FST) {
   return folder
 }
 
-
-// TODO: in multisource.ts, generate an error token if cannot resolve
 function load(path: string, fs: FST) {
   try {
     return fs.readFileSync(path).toString()
@@ -185,10 +165,4 @@ function load(path: string, fs: FST) {
     // NOTE: don't need this, as in all cases, we consider failed
     // reads to indicate non-existence.
   }
-}
-
-
-
-export {
-  makePkgResolver,
 }
