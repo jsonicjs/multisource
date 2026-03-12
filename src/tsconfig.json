@@ -3,14 +3,12 @@
     "esModuleInterop": true,
     "module": "nodenext",
     "noEmitOnError": true,
-    "outDir":"../dist",
-    "rootDir":".",
+    "outDir": "../dist",
+    "rootDir": ".",
+    "declaration": true,
     "resolveJsonModule": true,
     "sourceMap": true,
     "strict": true,
-    "target": "es2021",
-    "declaration": true,
-    "declarationDir": "../dist"
+    "target": "ES2021"
   }
 }
-
