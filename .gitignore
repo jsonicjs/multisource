@@ -105,6 +105,11 @@ typings/
 
 *~
 
+dist
+dist-test
+
+.idea
+
 package-lock.json
 yarn.lock
 
