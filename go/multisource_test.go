@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	jsonic "github.com/jsonicjs/jsonic/go"
+	path "github.com/jsonicjs/path/go"
 )
 
 // assert is a test helper that checks deep equality.
@@ -306,4 +307,58 @@ func TestAbsolutePath(t *testing.T) {
 	}
 	m, _ := r.(map[string]any)
 	assert(t, "abs-path", m["cfg"], map[string]any{"env": "prod"})
+}
+
+func TestPathPlugin(t *testing.T) {
+	files := map[string]string{
+		"a.jsonic": `{a:1}`,
+		"b.jsonic": `{b:2}`,
+	}
+
+	j := MakeJsonic(MultiSourceOptions{
+		Resolver: MakeMemResolver(files),
+	})
+	j.Use(path.Path, nil)
+
+	r, err := j.Parse(`{x: @a.jsonic, y: @b.jsonic}`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	m, _ := r.(map[string]any)
+	assert(t, "path-a", m["x"], map[string]any{"a": float64(1)})
+	assert(t, "path-b", m["y"], map[string]any{"b": float64(2)})
+}
+
+func TestMergeIntoMap(t *testing.T) {
+	files := map[string]string{
+		"a.jsonic": `{a:1}`,
+	}
+
+	j := MakeJsonic(MultiSourceOptions{
+		Resolver: MakeMemResolver(files),
+	})
+
+	r, err := j.Parse(`{x:2, @a.jsonic}`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	m, _ := r.(map[string]any)
+	assert(t, "merge-x", m["x"], float64(2))
+	assert(t, "merge-a", m["a"], float64(1))
+}
+
+func TestTopLevelRef(t *testing.T) {
+	files := map[string]string{
+		"a.jsonic": `{a:1}`,
+	}
+
+	j := MakeJsonic(MultiSourceOptions{
+		Resolver: MakeMemResolver(files),
+	})
+
+	r, err := j.Parse(`@a.jsonic`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert(t, "top-level", r, map[string]any{"a": float64(1)})
 }

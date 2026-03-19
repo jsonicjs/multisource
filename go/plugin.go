@@ -3,17 +3,10 @@
 package multisource
 
 import (
-	"strings"
+	"fmt"
 
+	directive "github.com/jsonicjs/directive/go"
 	jsonic "github.com/jsonicjs/jsonic/go"
-)
-
-// lexMode tracks which kind of token the custom matchers should produce.
-type lexMode int
-
-const (
-	modeNormal lexMode = iota // Normal jsonic parsing.
-	modePath                  // Scanning a multisource path after @.
 )
 
 // MultiSource is a jsonic plugin that adds multisource reference support.
@@ -25,197 +18,137 @@ func MultiSource(j *jsonic.Jsonic, pluginOpts map[string]any) {
 	if markChar == "" {
 		markChar = "@"
 	}
-	markByte := markChar[0]
-
-	mode := modeNormal
 
 	cfg := j.Config()
-
-	// Register the mark character as a fixed token.
-	AT := j.Token("#AT", markChar)
-	cfg.SortFixedTokens()
-
-	// Register custom token type for multisource paths.
-	MP := j.Token("#MP")
-
-	// Standard tokens.
-	ZZ := j.Token("#ZZ")
-	OB := j.Token("#OB") // {
-	CB := j.Token("#CB") // }
-	CL := j.Token("#CL") // :
-	CA := j.Token("#CA") // ,
-	_ = ZZ
-	_ = OB
-	_ = CB
-	_ = CL
-	_ = CA
 
 	// Add the mark character to ender chars so built-in matchers stop there.
 	if cfg.EnderChars == nil {
 		cfg.EnderChars = make(map[rune]bool)
 	}
-	cfg.EnderChars[rune(markByte)] = true
+	cfg.EnderChars[rune(markChar[0])] = true
 
-	// Path matcher: reads the path after @.
-	// Runs at priority < 2e6 so it executes before built-in matchers.
-	j.AddMatcher("msrcpath", 100000, func(lex *jsonic.Lex) *jsonic.Token {
-		if mode != modePath {
-			return nil
-		}
-		mode = modeNormal
+	// Define a directive that can load content from multiple sources.
+	dopts := directive.DirectiveOptions{
+		Name: "multisource",
+		Open: markChar,
+		Rules: &directive.RulesOption{
+			Open: map[string]*directive.RuleMod{
+				"val": {},
+				"pair": {
+					C: func(r *jsonic.Rule, ctx *jsonic.Context) bool {
+						return r.Lte("pk", 0)
+					},
+				},
+			},
+		},
+		Action: func(rule *jsonic.Rule, ctx *jsonic.Context) {
+			spec := rule.Child.Node
 
-		pnt := lex.Cursor()
-		src := lex.Src
-		sI := pnt.SI
-		cI := pnt.CI
-
-		if sI >= pnt.Len {
-			return nil
-		}
-
-		// Skip leading whitespace.
-		for sI < pnt.Len && (src[sI] == ' ' || src[sI] == '\t') {
-			sI++
-			cI++
-		}
-
-		ch := src[sI]
-		// Don't match at delimiters or quotes.
-		if ch == ',' || ch == '}' || ch == ']' || ch == '{' || ch == '[' ||
-			ch == '\n' || ch == '\r' || ch == markByte {
-			return nil
-		}
-
-		// Handle quoted paths: "path" or 'path'.
-		if ch == '"' || ch == '\'' {
-			quote := ch
-			sI++ // skip opening quote
-			cI++
-			startI := sI
-			for sI < pnt.Len && src[sI] != quote {
-				if src[sI] == '\\' && sI+1 < pnt.Len {
-					sI += 2
-					cI += 2
-					continue
+			var pathStr string
+			switch v := spec.(type) {
+			case string:
+				pathStr = v
+			case map[string]any:
+				if p, ok := v["path"]; ok {
+					pathStr = fmt.Sprintf("%v", p)
 				}
-				sI++
-				cI++
 			}
-			pathStr := src[startI:sI]
-			raw := src[pnt.SI:sI]
-			if sI < pnt.Len {
-				sI++ // skip closing quote
-				cI++
-				raw = src[pnt.SI:sI]
+
+			res := resolveSource(pathStr, opts, j)
+
+			from := ""
+			if rule.Parent != nil && rule.Parent != jsonic.NoRule {
+				from = rule.Parent.Name
 			}
-			tkn := lex.Token("#MP", MP, pathStr, raw)
-			pnt.SI = sI
-			pnt.CI = cI
-			return tkn
-		}
 
-		startI := sI
-
-		// Read path until a delimiter.
-		for sI < pnt.Len {
-			c := src[sI]
-			if c == ' ' || c == '\t' || c == '\n' || c == '\r' ||
-				c == ',' || c == '}' || c == ']' || c == ':' ||
-				c == '{' || c == '[' || c == markByte {
-				break
-			}
-			sI++
-			cI++
-		}
-
-		if sI == startI {
-			return nil
-		}
-
-		raw := src[startI:sI]
-		pathStr := strings.TrimSpace(raw)
-
-		tkn := lex.Token("#MP", MP, pathStr, raw)
-		pnt.SI = sI
-		pnt.CI = cI
-		return tkn
-	})
-
-	// resolveSource resolves a multisource path and sets the node value.
-	resolveSource := func(pathStr string) any {
-		spec := ResolvePathSpec(pathStr, opts.Path)
-		res := opts.Resolver(spec, opts)
-
-		if !res.Found {
-			return nil
-		}
-
-		proc := getProcessor(res.Kind, opts.Processor)
-		proc(&res, opts, j)
-
-		return res.Val
-	}
-
-	// Extend the val rule to handle @path in value position.
-	j.Rule("val", func(rs *jsonic.RuleSpec) {
-		newAlts := []*jsonic.AltSpec{
-			// @path in value position: resolve and use as value.
-			{
-				S: [][]jsonic.Tin{{AT}},
-				P: "msrc",
-				A: func(r *jsonic.Rule, ctx *jsonic.Context) {
-					mode = modePath
-				},
-			},
-		}
-		rs.Open = append(newAlts, rs.Open...)
-	})
-
-	// Extend the pair rule to handle @path in pair position (merge into map).
-	j.Rule("pair", func(rs *jsonic.RuleSpec) {
-		newAlts := []*jsonic.AltSpec{
-			{
-				S: [][]jsonic.Tin{{AT}},
-				P: "msrc",
-				U: map[string]any{"msrc_merge": true},
-				A: func(r *jsonic.Rule, ctx *jsonic.Context) {
-					mode = modePath
-				},
-			},
-		}
-		rs.Open = append(newAlts, rs.Open...)
-	})
-
-	// The msrc rule handles resolving the multisource path.
-	j.Rule("msrc", func(rs *jsonic.RuleSpec) {
-		rs.Clear()
-
-		rs.Open = []*jsonic.AltSpec{
-			{
-				S: [][]jsonic.Tin{{MP}},
-				A: func(r *jsonic.Rule, ctx *jsonic.Context) {
-					pathStr, _ := r.O0.Val.(string)
-					if pathStr == "" {
-						pathStr = r.O0.Src
-					}
-
-					val := resolveSource(pathStr)
-					r.Node = val
-
-					// If parent requested merge, merge the resolved map.
-					if r.Parent != nil && r.Parent != jsonic.NoRule {
-						if _, doMerge := r.Parent.U["msrc_merge"]; doMerge {
-							if m, ok := val.(map[string]any); ok {
-								if parent, ok := r.Parent.Node.(map[string]any); ok {
-									for k, v := range m {
-										parent[k] = v
-									}
-								}
+			// Handle the {@foo} case, injecting keys into parent map.
+			if from == "pair" {
+				if m, ok := res.(map[string]any); ok {
+					if rule.Parent.Parent != nil && rule.Parent.Parent != jsonic.NoRule {
+						if parent, ok := rule.Parent.Parent.Node.(map[string]any); ok {
+							for k, v := range m {
+								parent[k] = v
 							}
 						}
 					}
-				},
-			},
-		}
-	})
+				}
+			} else {
+				rule.Node = res
+			}
+		},
+		Custom: func(j *jsonic.Jsonic, cfg directive.DirectiveConfig) {
+			OPEN := cfg.OPEN
+			name := cfg.Name
+
+			// Handle special case of @foo first token - assume a map.
+			j.Rule("val", func(rs *jsonic.RuleSpec) {
+				rs.PrependOpen(
+					&jsonic.AltSpec{
+						S: [][]jsonic.Tin{{OPEN}},
+						C: func(r *jsonic.Rule, ctx *jsonic.Context) bool {
+							return r.N["pk"] > 0
+						},
+						B: 1,
+						G: name + "_undive",
+					},
+					&jsonic.AltSpec{
+						S: [][]jsonic.Tin{{OPEN}},
+						C: func(r *jsonic.Rule, ctx *jsonic.Context) bool {
+							return r.D == 0
+						},
+						P: "map",
+						B: 1,
+						N: map[string]int{name + "_top": 1},
+					},
+				)
+			})
+
+			j.Rule("map", func(rs *jsonic.RuleSpec) {
+				rs.PrependOpen(&jsonic.AltSpec{
+					S: [][]jsonic.Tin{{OPEN}},
+					C: func(r *jsonic.Rule, ctx *jsonic.Context) bool {
+						return r.D == 1 && r.N[name+"_top"] == 1
+					},
+					P: "pair",
+					B: 1,
+				})
+				rs.PrependClose(&jsonic.AltSpec{
+					S: [][]jsonic.Tin{{OPEN}},
+					C: func(r *jsonic.Rule, ctx *jsonic.Context) bool {
+						return r.N["pk"] > 0
+					},
+					B: 1,
+					G: name + "_undive",
+				})
+			})
+
+			j.Rule("pair", func(rs *jsonic.RuleSpec) {
+				rs.PrependClose(&jsonic.AltSpec{
+					S: [][]jsonic.Tin{{OPEN}},
+					C: func(r *jsonic.Rule, ctx *jsonic.Context) bool {
+						return r.N["pk"] > 0
+					},
+					B: 1,
+					G: name + "_undive",
+				})
+			})
+		},
+	}
+
+	directive.Apply(j, dopts)
+}
+
+// resolveSource resolves a multisource path and returns the processed value.
+func resolveSource(pathStr string, opts *MultiSourceOptions, j *jsonic.Jsonic) any {
+	spec := ResolvePathSpec(pathStr, opts.Path)
+	res := opts.Resolver(spec, opts)
+
+	if !res.Found {
+		return nil
+	}
+
+	proc := getProcessor(res.Kind, opts.Processor)
+	proc(&res, opts, j)
+
+	return res.Val
 }
