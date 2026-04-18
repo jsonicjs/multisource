@@ -216,7 +216,7 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
             s: [OPEN],
             c: (r) => 0 < r.n.pk && 'pair' != r.parent.name,
             b: 1,
-            g: name + '_undive',
+            g: name + '-undive',
           },
           ,
           {
@@ -239,7 +239,7 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
           s: [OPEN],
           c: (r) => 0 < r.n.pk,
           b: 1,
-          g: name + '_undive',
+          g: name + '-undive',
         })
       })
 
@@ -248,7 +248,7 @@ const MultiSource: Plugin = (jsonic: Jsonic, popts: MultiSourceOptions) => {
           s: [OPEN],
           c: (r) => 0 < r.n.pk,
           b: 1,
-          g: name + '_undive',
+          g: name + '-undive',
         })
       })
 

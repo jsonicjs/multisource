@@ -47,8 +47,11 @@
   },
   "devDependencies": {
     "@hapi/code": "^9.0.3",
+    "@jsonic/directive": "github:jsonicjs/directive#main",
     "@jsonic/doc": "^0.0.9",
+    "@jsonic/path": "github:jsonicjs/path#main",
     "@types/node": "^25.4.0",
+    "jsonic": "github:jsonicjs/jsonic#main",
     "jsonic-multisource-pkg-test": "^0.0.1",
     "memfs": "^4.56.11",
     "typescript": "^5.9.3"

@@ -157,7 +157,7 @@ const MultiSource = (jsonic, popts) => {
                         s: [OPEN],
                         c: (r) => 0 < r.n.pk && 'pair' != r.parent.name,
                         b: 1,
-                        g: name + '_undive',
+                        g: name + '-undive',
                     },
                     ,
                     {
@@ -179,7 +179,7 @@ const MultiSource = (jsonic, popts) => {
                     s: [OPEN],
                     c: (r) => 0 < r.n.pk,
                     b: 1,
-                    g: name + '_undive',
+                    g: name + '-undive',
                 });
             });
             jsonic.rule('pair', (rs) => {
@@ -187,7 +187,7 @@ const MultiSource = (jsonic, popts) => {
                     s: [OPEN],
                     c: (r) => 0 < r.n.pk,
                     b: 1,
-                    g: name + '_undive',
+                    g: name + '-undive',
                 });
             });
         },
