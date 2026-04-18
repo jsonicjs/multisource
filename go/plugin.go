@@ -12,7 +12,7 @@ import (
 // MultiSource is a jsonic plugin that adds multisource reference support.
 // When '@path' is encountered in the input, the path is resolved using
 // the configured resolver and processed into a value.
-func MultiSource(j *jsonic.Jsonic, pluginOpts map[string]any) {
+func MultiSource(j *jsonic.Jsonic, pluginOpts map[string]any) error {
 	opts := getOpts(pluginOpts)
 	markChar := opts.MarkChar
 	if markChar == "" {
@@ -136,6 +136,7 @@ func MultiSource(j *jsonic.Jsonic, pluginOpts map[string]any) {
 	}
 
 	directive.Apply(j, dopts)
+	return nil
 }
 
 // resolveSource resolves a multisource path and returns the processed value.
