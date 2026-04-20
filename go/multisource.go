@@ -10,6 +10,9 @@ import (
 	jsonic "github.com/jsonicjs/jsonic/go"
 )
 
+// Version is the Go module release version.
+const Version = "0.1.0"
+
 // MultiSourceOptions configures the multisource parser.
 type MultiSourceOptions struct {
 	Resolver    Resolver
