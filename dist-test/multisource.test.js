@@ -1,8 +1,11 @@
 "use strict";
 /* Copyright (c) 2021-2025 Richard Rodger and other contributors, MIT License */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const node_test_1 = require("node:test");
-const code_1 = require("@hapi/code");
+const node_assert_1 = __importDefault(require("node:assert"));
 const memfs_1 = require("memfs");
 const jsonic_1 = require("jsonic");
 const multisource_1 = require("../dist/multisource");
@@ -29,22 +32,22 @@ const path_1 = require("@jsonic/path");
             // },
         };
         const j = jsonic_1.Jsonic.make().use(multisource_1.MultiSource, o);
-        (0, code_1.expect)(j('a:@a.jsonic,x:1')).equal({ a: { a: 1 }, x: 1 });
-        (0, code_1.expect)(j('b:@b.jsc,x:1')).equal({ b: { b: 2 }, x: 1 });
-        (0, code_1.expect)(j('c:@c.txt,x:1')).equal({ c: 'CCC', x: 1 });
-        (0, code_1.expect)(j('d:@d.json,x:1')).equal({ d: { d: 3 }, x: 1 });
-        // expect(j('e:@e.js,x:1')).equal({ e: { e: 4 }, x: 1 })
-        (0, code_1.expect)(j('f:@f,x:1')).equal({ f: { f: 5 }, x: 1 });
-        (0, code_1.expect)(j('g:@g,x:1')).equal({ g: { g: 6 }, x: 1 });
-        (0, code_1.expect)(j('h:@h,x:1')).equal({ h: { h: 7 }, x: 1 });
-        (0, code_1.expect)(j(`
+        node_assert_1.default.deepEqual(j('a:@a.jsonic,x:1'), { a: { a: 1 }, x: 1 });
+        node_assert_1.default.deepEqual(j('b:@b.jsc,x:1'), { b: { b: 2 }, x: 1 });
+        node_assert_1.default.deepEqual(j('c:@c.txt,x:1'), { c: 'CCC', x: 1 });
+        node_assert_1.default.deepEqual(j('d:@d.json,x:1'), { d: { d: 3 }, x: 1 });
+        // assert.deepEqual(j('e:@e.js,x:1'), { e: { e: 4 }, x: 1 })
+        node_assert_1.default.deepEqual(j('f:@f,x:1'), { f: { f: 5 }, x: 1 });
+        node_assert_1.default.deepEqual(j('g:@g,x:1'), { g: { g: 6 }, x: 1 });
+        node_assert_1.default.deepEqual(j('h:@h,x:1'), { h: { h: 7 }, x: 1 });
+        node_assert_1.default.deepEqual(j(`
   x:a:@a.jsonic 
   x:b:@b.jsc 
   x:c:@c.txt 
   x:d:@d.json 
   // x:e:@e.js 
   y:1
-  `)).equal({
+  `), {
             x: {
                 a: {
                     a: 1,
@@ -72,17 +75,17 @@ const path_1 = require("@jsonic/path");
         const j = jsonic_1.Jsonic.make()
             // .use(Debug, { trace: true })
             .use(multisource_1.MultiSource, o);
-        (0, code_1.expect)(j('{x:@a.jsonic}')).equal({ x: { a: 1 } });
-        (0, code_1.expect)(j('x:@a.jsonic')).equal({ x: { a: 1 } });
-        (0, code_1.expect)(j('{x:@a.jsonic y:1}')).equal({ x: { a: 1 }, y: 1 });
-        (0, code_1.expect)(j('x:@a.jsonic y:1')).equal({ x: { a: 1 }, y: 1 });
-        (0, code_1.expect)(j('{z:2 x:@a.jsonic y:1}')).equal({ z: 2, x: { a: 1 }, y: 1 });
-        (0, code_1.expect)(j('z:2 x:@a.jsonic y:1')).equal({ z: 2, x: { a: 1 }, y: 1 });
-        (0, code_1.expect)(j('{x:y:@a.jsonic}')).equal({ x: { y: { a: 1 } } });
-        (0, code_1.expect)(j('x:y:@a.jsonic')).equal({ x: { y: { a: 1 } } });
-        (0, code_1.expect)(j('{x:y:2 @a.jsonic}')).equal({ x: { y: 2 }, a: 1 });
-        (0, code_1.expect)(j('x:y:2 @a.jsonic')).equal({ x: { y: 2 }, a: 1 });
-        (0, code_1.expect)(j('x:2 @a.jsonic')).equal({ x: 2, a: 1 });
+        node_assert_1.default.deepEqual(j('{x:@a.jsonic}'), { x: { a: 1 } });
+        node_assert_1.default.deepEqual(j('x:@a.jsonic'), { x: { a: 1 } });
+        node_assert_1.default.deepEqual(j('{x:@a.jsonic y:1}'), { x: { a: 1 }, y: 1 });
+        node_assert_1.default.deepEqual(j('x:@a.jsonic y:1'), { x: { a: 1 }, y: 1 });
+        node_assert_1.default.deepEqual(j('{z:2 x:@a.jsonic y:1}'), { z: 2, x: { a: 1 }, y: 1 });
+        node_assert_1.default.deepEqual(j('z:2 x:@a.jsonic y:1'), { z: 2, x: { a: 1 }, y: 1 });
+        node_assert_1.default.deepEqual(j('{x:y:@a.jsonic}'), { x: { y: { a: 1 } } });
+        node_assert_1.default.deepEqual(j('x:y:@a.jsonic'), { x: { y: { a: 1 } } });
+        node_assert_1.default.deepEqual(j('{x:y:2 @a.jsonic}'), { x: { y: 2 }, a: 1 });
+        node_assert_1.default.deepEqual(j('x:y:2 @a.jsonic'), { x: { y: 2 }, a: 1 });
+        node_assert_1.default.deepEqual(j('x:2 @a.jsonic'), { x: 2, a: 1 });
     });
     (0, node_test_1.test)('implicit', () => {
         const o = {
@@ -93,56 +96,56 @@ const path_1 = require("@jsonic/path");
             }),
         };
         const j = jsonic_1.Jsonic.make().use(multisource_1.MultiSource, o);
-        (0, code_1.expect)(j('a:@a.jsonic,x:1')).equal({ a: { a: 1 }, x: 1 });
-        (0, code_1.expect)(j('[@a.jsonic,{x:1}]')).equal([{ a: 1 }, { x: 1 }]);
-        (0, code_1.expect)(j('@a.jsonic')).equal({ a: 1 });
-        (0, code_1.expect)(j('b:2 @a.jsonic')).equal({ b: 2, a: 1 });
-        (0, code_1.expect)(j('b:2 @a.jsonic c:3')).equal({ b: 2, a: 1, c: 3 });
-        (0, code_1.expect)(j('@a.jsonic b:2')).equal({ a: 1, b: 2 });
-        (0, code_1.expect)(j('y:@b.jsonic,x:1')).equal({ y: { a: { b: 1, c: 2 } }, x: 1 });
-        (0, code_1.expect)(j('@b.jsonic')).equal({ a: { b: 1, c: 2 } });
-        (0, code_1.expect)(j('x:2 @b.jsonic')).equal({ x: 2, a: { b: 1, c: 2 } });
-        (0, code_1.expect)(j('x:2 @b.jsonic y:3')).equal({ x: 2, a: { b: 1, c: 2 }, y: 3 });
-        (0, code_1.expect)(j('@b.jsonic y:2')).equal({ a: { b: 1, c: 2 }, y: 2 });
-        (0, code_1.expect)(j('a:{d:3} @b.jsonic')).equal({ a: { b: 1, c: 2, d: 3 } });
-        (0, code_1.expect)(j('a:{d:3} @b.jsonic y:2')).equal({
+        node_assert_1.default.deepEqual(j('a:@a.jsonic,x:1'), { a: { a: 1 }, x: 1 });
+        node_assert_1.default.deepEqual(j('[@a.jsonic,{x:1}]'), [{ a: 1 }, { x: 1 }]);
+        node_assert_1.default.deepEqual(j('@a.jsonic'), { a: 1 });
+        node_assert_1.default.deepEqual(j('b:2 @a.jsonic'), { b: 2, a: 1 });
+        node_assert_1.default.deepEqual(j('b:2 @a.jsonic c:3'), { b: 2, a: 1, c: 3 });
+        node_assert_1.default.deepEqual(j('@a.jsonic b:2'), { a: 1, b: 2 });
+        node_assert_1.default.deepEqual(j('y:@b.jsonic,x:1'), { y: { a: { b: 1, c: 2 } }, x: 1 });
+        node_assert_1.default.deepEqual(j('@b.jsonic'), { a: { b: 1, c: 2 } });
+        node_assert_1.default.deepEqual(j('x:2 @b.jsonic'), { x: 2, a: { b: 1, c: 2 } });
+        node_assert_1.default.deepEqual(j('x:2 @b.jsonic y:3'), { x: 2, a: { b: 1, c: 2 }, y: 3 });
+        node_assert_1.default.deepEqual(j('@b.jsonic y:2'), { a: { b: 1, c: 2 }, y: 2 });
+        node_assert_1.default.deepEqual(j('a:{d:3} @b.jsonic'), { a: { b: 1, c: 2, d: 3 } });
+        node_assert_1.default.deepEqual(j('a:{d:3} @b.jsonic y:2'), {
             a: { b: 1, c: 2, d: 3 },
             y: 2,
         });
-        (0, code_1.expect)(j('a:{d:3} @b.jsonic a:{d:4,f:5}')).equal({
+        node_assert_1.default.deepEqual(j('a:{d:3} @b.jsonic a:{d:4,f:5}'), {
             a: { b: 1, c: 2, d: 4, f: 5 },
         });
-        (0, code_1.expect)(j('@b.jsonic a:{d:4,f:5}')).equal({
+        node_assert_1.default.deepEqual(j('@b.jsonic a:{d:4,f:5}'), {
             a: { b: 1, c: 2, d: 4, f: 5 },
         });
-        (0, code_1.expect)(j('a:{d:3} @b.jsonic a:{d:4,f:5} z:1')).equal({
-            a: { b: 1, c: 2, d: 4, f: 5 },
-            z: 1,
-        });
-        (0, code_1.expect)(j('@b.jsonic a:{d:4,f:5} z:1')).equal({
+        node_assert_1.default.deepEqual(j('a:{d:3} @b.jsonic a:{d:4,f:5} z:1'), {
             a: { b: 1, c: 2, d: 4, f: 5 },
             z: 1,
         });
-        (0, code_1.expect)(j('@a.jsonic @d.jsonic')).equal({
+        node_assert_1.default.deepEqual(j('@b.jsonic a:{d:4,f:5} z:1'), {
+            a: { b: 1, c: 2, d: 4, f: 5 },
+            z: 1,
+        });
+        node_assert_1.default.deepEqual(j('@a.jsonic @d.jsonic'), {
             a: 1,
             d: 3,
         });
-        (0, code_1.expect)(j('x:11 @a.jsonic @d.jsonic')).equal({
+        node_assert_1.default.deepEqual(j('x:11 @a.jsonic @d.jsonic'), {
             x: 11,
             a: 1,
             d: 3,
         });
-        (0, code_1.expect)(j('@a.jsonic x:11 @d.jsonic')).equal({
+        node_assert_1.default.deepEqual(j('@a.jsonic x:11 @d.jsonic'), {
             x: 11,
             a: 1,
             d: 3,
         });
-        (0, code_1.expect)(j('x:{} @a.jsonic @d.jsonic')).equal({
+        node_assert_1.default.deepEqual(j('x:{} @a.jsonic @d.jsonic'), {
             x: {},
             a: 1,
             d: 3,
         });
-        (0, code_1.expect)(j('x:y:{} @a.jsonic @d.jsonic')).equal({
+        node_assert_1.default.deepEqual(j('x:y:{} @a.jsonic @d.jsonic'), {
             x: { y: {} },
             a: 1,
             d: 3,
@@ -157,10 +160,10 @@ const path_1 = require("@jsonic/path");
             }),
         };
         const j = jsonic_1.Jsonic.make().use(multisource_1.MultiSource, o);
-        (0, code_1.expect)(j('@a')).equal({ a: 1, b: { b: 2, c: { c: 3 } }, x: 99 });
-        (0, code_1.expect)(j('@a', {})).equal({ a: 1, b: { b: 2, c: { c: 3 } }, x: 99 });
-        (0, code_1.expect)(j('@a', { x: 1 })).equal({ a: 1, b: { b: 2, c: { c: 3 } }, x: 99 });
-        (0, code_1.expect)(j('@a', { multisource: { path: undefined } })).equal({
+        node_assert_1.default.deepEqual(j('@a'), { a: 1, b: { b: 2, c: { c: 3 } }, x: 99 });
+        node_assert_1.default.deepEqual(j('@a', {}), { a: 1, b: { b: 2, c: { c: 3 } }, x: 99 });
+        node_assert_1.default.deepEqual(j('@a', { x: 1 }), { a: 1, b: { b: 2, c: { c: 3 } }, x: 99 });
+        node_assert_1.default.deepEqual(j('@a', { multisource: { path: undefined } }), {
             a: 1,
             b: { b: 2, c: { c: 3 } },
             x: 99,
@@ -172,15 +175,15 @@ const path_1 = require("@jsonic/path");
         };
         const j = jsonic_1.Jsonic.make().use(multisource_1.MultiSource, o);
         // j('x:@a')
-        (0, code_1.expect)(() => j('x:@a')).throws(/multisource_not_found.*:1:3/s);
-        (0, code_1.expect)(() => j('x:@a', { fileName: 'foo' })).throws(/foo:1:3/s);
+        node_assert_1.default.throws(() => j('x:@a'), /multisource_not_found.*:1:3/s);
+        node_assert_1.default.throws(() => j('x:@a', { fileName: 'foo' }), /foo:1:3/s);
     });
     (0, node_test_1.test)('error-file', () => {
         const o = {
             resolver: (0, file_1.makeFileResolver)(),
         };
         const j = jsonic_1.Jsonic.make().use(multisource_1.MultiSource, o);
-        (0, code_1.expect)(() => j('@../test/e02.jsonic', { multisource: { path: __dirname } })).throws(/e02\.jsonic:2:3/);
+        node_assert_1.default.throws(() => j('@../test/e02.jsonic', { multisource: { path: __dirname } }), /e02\.jsonic:2:3/);
         let deps = {};
         try {
             j('@../test/e01.jsonic', { multisource: { path: __dirname, deps } });
@@ -188,9 +191,9 @@ const path_1 = require("@jsonic/path");
         catch (e) {
             // console.log(e)
             // console.dir(e.meta.multisource, { depth: null })
-            (0, code_1.expect)(e.message).match(/e02\.jsonic:2:3/);
-            (0, code_1.expect)(e.meta.multisource.path).match(/e02\.jsonic/);
-            (0, code_1.expect)(e.meta.multisource.parents[1]).match(/e01\.jsonic/);
+            node_assert_1.default.match(e.message, /e02\.jsonic:2:3/);
+            node_assert_1.default.match(e.meta.multisource.path, /e02\.jsonic/);
+            node_assert_1.default.match(e.meta.multisource.parents[1], /e01\.jsonic/);
         }
     });
     (0, node_test_1.test)('basic-file', () => {
@@ -198,39 +201,39 @@ const path_1 = require("@jsonic/path");
             resolver: (0, file_1.makeFileResolver)(),
         });
         let deps = {};
-        (0, code_1.expect)(j0('a:1,b:@"../test/t01.jsonic"', { multisource: { path: __dirname, deps } })).equal({ a: 1, b: { c: 2 } });
+        node_assert_1.default.deepEqual(j0('a:1,b:@"../test/t01.jsonic"', { multisource: { path: __dirname, deps } }), { a: 1, b: { c: 2 } });
         // console.dir(deps, { depth: null })
-        (0, code_1.expect)(j0('a:1,b:@"../test/t01.jsonic"', { multisource: { path: __dirname } })).equal({ a: 1, b: { c: 2 } });
-        (0, code_1.expect)(j0('@"../test/t01.jsonic"', { multisource: { path: __dirname } })).equal({ c: 2 });
-        (0, code_1.expect)(j0('a:1,@"../test/t01.jsonic"', { multisource: { path: __dirname } })).equal({ a: 1, c: 2 });
-        (0, code_1.expect)(j0('@"../test/t01.jsonic",a:1', { multisource: { path: __dirname } })).equal({ a: 1, c: 2 });
-        (0, code_1.expect)(j0('a:1,@"../test/t01.jsonic",b:2', { multisource: { path: __dirname } })).equal({ a: 1, c: 2, b: 2 });
-        (0, code_1.expect)(j0('a:1,@"../test/t01.jsonic",b:2,@"../test/t01.jsonic",', { multisource: { path: __dirname } })).equal({ a: 1, c: 2, b: 2 });
-        (0, code_1.expect)(() => j0('a:1,b:@"../test/t01.jsonic"', { multisource: {} })).throws(/not found/);
-        (0, code_1.expect)(() => j0('a:1,b:@"../test/t01.jsonic"', {})).throws(/not found/);
-        (0, code_1.expect)(() => j0('a:1,b:@"../test/t01.jsonic"')).throws(/not found/);
+        node_assert_1.default.deepEqual(j0('a:1,b:@"../test/t01.jsonic"', { multisource: { path: __dirname } }), { a: 1, b: { c: 2 } });
+        node_assert_1.default.deepEqual(j0('@"../test/t01.jsonic"', { multisource: { path: __dirname } }), { c: 2 });
+        node_assert_1.default.deepEqual(j0('a:1,@"../test/t01.jsonic"', { multisource: { path: __dirname } }), { a: 1, c: 2 });
+        node_assert_1.default.deepEqual(j0('@"../test/t01.jsonic",a:1', { multisource: { path: __dirname } }), { a: 1, c: 2 });
+        node_assert_1.default.deepEqual(j0('a:1,@"../test/t01.jsonic",b:2', { multisource: { path: __dirname } }), { a: 1, c: 2, b: 2 });
+        node_assert_1.default.deepEqual(j0('a:1,@"../test/t01.jsonic",b:2,@"../test/t01.jsonic",', { multisource: { path: __dirname } }), { a: 1, c: 2, b: 2 });
+        node_assert_1.default.throws(() => j0('a:1,b:@"../test/t01.jsonic"', { multisource: {} }), /not found/);
+        node_assert_1.default.throws(() => j0('a:1,b:@"../test/t01.jsonic"', {}), /not found/);
+        node_assert_1.default.throws(() => j0('a:1,b:@"../test/t01.jsonic"'), /not found/);
         deps = {};
-        (0, code_1.expect)(j0('a:1,b:@"../test/t02.jsonic",c:3', {
+        node_assert_1.default.deepEqual(j0('a:1,b:@"../test/t02.jsonic",c:3', {
             multisource: { path: __dirname, deps },
-        })).equal({ a: 1, b: { d: 2, e: { f: 4 }, g: 9 }, c: 3 });
+        }), { a: 1, b: { d: 2, e: { f: 4 }, g: 9 }, c: 3 });
     });
     (0, node_test_1.test)('file-kind', () => {
         let j0 = jsonic_1.Jsonic.make().use(multisource_1.MultiSource, {
             resolver: (0, file_1.makeFileResolver)(),
         });
         let deps = {};
-        (0, code_1.expect)(j0('a:1,b:@"../test/k01.jsonic"', { multisource: { path: __dirname, deps } })).equal({ a: 1, b: { c: 2 } });
+        node_assert_1.default.deepEqual(j0('a:1,b:@"../test/k01.jsonic"', { multisource: { path: __dirname, deps } }), { a: 1, b: { c: 2 } });
         // console.dir(deps, { depth: null })
         deps = {};
-        (0, code_1.expect)(j0('a:1,d:@"../test/k02.js"', { multisource: { path: __dirname, deps } })).equal({ a: 1, d: { e: 3 } });
+        node_assert_1.default.deepEqual(j0('a:1,d:@"../test/k02.js"', { multisource: { path: __dirname, deps } }), { a: 1, d: { e: 3 } });
         deps = {};
-        (0, code_1.expect)(j0('a:1,f:@"../test/k03.json"', { multisource: { path: __dirname, deps } })).equal({ a: 1, f: { g: 4 } });
+        node_assert_1.default.deepEqual(j0('a:1,f:@"../test/k03.json"', { multisource: { path: __dirname, deps } }), { a: 1, f: { g: 4 } });
         deps = {};
-        (0, code_1.expect)(j0('a:1,b:@"../test/k01.jsonic",d:@"../test/k02.js",f:@"../test/k03.json"', {
+        node_assert_1.default.deepEqual(j0('a:1,b:@"../test/k01.jsonic",d:@"../test/k02.js",f:@"../test/k03.json"', {
             multisource: { path: __dirname, deps },
-        })).equal({ a: 1, b: { c: 2 }, d: { e: 3 }, f: { g: 4 } });
+        }), { a: 1, b: { c: 2 }, d: { e: 3 }, f: { g: 4 } });
         deps = {};
-        (0, code_1.expect)(j0('@"../test/k04.jsc"', { multisource: { path: __dirname, deps } })).equal({ a: 1, b: { c: 2 }, d: { e: 3 }, f: { g: 4 } });
+        node_assert_1.default.deepEqual(j0('@"../test/k04.jsc"', { multisource: { path: __dirname, deps } }), { a: 1, b: { c: 2 }, d: { e: 3 }, f: { g: 4 } });
     });
     (0, node_test_1.test)('custom-ext', () => {
         let j0 = jsonic_1.Jsonic.make().use(multisource_1.MultiSource, {
@@ -240,7 +243,7 @@ const path_1 = require("@jsonic/path");
             }
         });
         let deps = {};
-        (0, code_1.expect)(j0('@"../test/t04.foo"', { multisource: { path: __dirname, deps } })).equal({ a: 1 });
+        node_assert_1.default.deepEqual(j0('@"../test/t04.foo"', { multisource: { path: __dirname, deps } }), { a: 1 });
     });
     (0, node_test_1.test)('path', () => {
         const o = {
@@ -263,7 +266,7 @@ const path_1 = require("@jsonic/path");
                 });
             });
         });
-        (0, code_1.expect)(j('a:b:@"x.jsonic"')).equal({
+        node_assert_1.default.deepEqual(j('a:b:@"x.jsonic"'), {
             $: '',
             a: {
                 $: 'a',
@@ -291,22 +294,21 @@ const path_1 = require("@jsonic/path");
             }
         });
         //      ; (fs as any).ISMEM = true
-        (0, code_1.expect)(j0('a:1 b:@"/b.jsonic"', { fs })).equal({
+        node_assert_1.default.deepEqual(j0('a:1 b:@"/b.jsonic"', { fs }), {
             a: 1, b: 2
         });
-        (0, code_1.expect)(j0('a:1 b:@"b.jsonic"', { fs, multisource: { path: '/' } })).equal({
+        node_assert_1.default.deepEqual(j0('a:1 b:@"b.jsonic"', { fs, multisource: { path: '/' } }), {
             a: 1, b: 2
         });
         const j1 = jsonic_1.Jsonic.make()
             .use(multisource_1.MultiSource, {
             resolver: (0, pkg_1.makePkgResolver)({ require })
         });
-        (0, code_1.expect)(j1('a:1 c:@"jsonic-multisource-pkg-test/zed.jsonic"', { fs, multisource: { path: '/' } }))
-            .equal({
+        node_assert_1.default.deepEqual(j1('a:1 c:@"jsonic-multisource-pkg-test/zed.jsonic"', { fs, multisource: { path: '/' } }), {
             a: 1, c: { zed: 99 }
         });
         // TODO: implement require over virtual fs
-        // expect(j1('a:1 c:@"foo/c.jsonic"', { fs, multisource: { path: '/' } })).equal({
+        // assert.deepEqual(j1('a:1 c:@"foo/c.jsonic"', { fs, multisource: { path: '/' } }), {
         //   a: 1, c: 3
         // })
     });
@@ -317,8 +319,7 @@ const path_1 = require("@jsonic/path");
                 require: [__dirname + '/..']
             })
         });
-        (0, code_1.expect)(j1('a:1 c:@"jsonic-multisource-pkg-test/zed.jsonic"', { multisource: { path: '/' } }))
-            .equal({ a: 1, c: { zed: 99 } });
+        node_assert_1.default.deepEqual(j1('a:1 c:@"jsonic-multisource-pkg-test/zed.jsonic"', { multisource: { path: '/' } }), { a: 1, c: { zed: 99 } });
     });
     (0, node_test_1.test)('pkg-require-string', () => {
         const j1 = jsonic_1.Jsonic.make()
@@ -327,8 +328,7 @@ const path_1 = require("@jsonic/path");
                 require: __dirname + '/..'
             })
         });
-        (0, code_1.expect)(j1('a:1 c:@"jsonic-multisource-pkg-test/zed.jsonic"', { multisource: { path: '/' } }))
-            .equal({ a: 1, c: { zed: 99 } });
+        node_assert_1.default.deepEqual(j1('a:1 c:@"jsonic-multisource-pkg-test/zed.jsonic"', { multisource: { path: '/' } }), { a: 1, c: { zed: 99 } });
     });
     (0, node_test_1.test)('pkg-virtual-fs-fallback', () => {
         const { fs } = (0, memfs_1.memfs)({
@@ -338,16 +338,14 @@ const path_1 = require("@jsonic/path");
             .use(multisource_1.MultiSource, {
             resolver: (0, pkg_1.makePkgResolver)({ require })
         });
-        (0, code_1.expect)(j1('a:1 d:@"/data.jsonic"', { fs, multisource: { path: '/' } }))
-            .equal({ a: 1, d: { data: 42 } });
+        node_assert_1.default.deepEqual(j1('a:1 d:@"/data.jsonic"', { fs, multisource: { path: '/' } }), { a: 1, d: { data: 42 } });
     });
     (0, node_test_1.test)('pkg-no-path', () => {
         const j1 = jsonic_1.Jsonic.make()
             .use(multisource_1.MultiSource, {
             resolver: (0, pkg_1.makePkgResolver)({ require })
         });
-        (0, code_1.expect)(j1('z:@"jsonic-multisource-pkg-test"'))
-            .equal({ z: 11 });
+        node_assert_1.default.deepEqual(j1('z:@"jsonic-multisource-pkg-test"'), { z: 11 });
     });
     (0, node_test_1.test)('pkg-resolvefolder-file', () => {
         const j1 = jsonic_1.Jsonic.make()
@@ -356,8 +354,7 @@ const path_1 = require("@jsonic/path");
         });
         // multisource path is a file, not a directory - tests resolvefolder isFile branch
         const filePath = __dirname + '/../package.json';
-        (0, code_1.expect)(j1('z:@"jsonic-multisource-pkg-test/zed.jsonic"', { multisource: { path: filePath } }))
-            .equal({ z: { zed: 99 } });
+        node_assert_1.default.deepEqual(j1('z:@"jsonic-multisource-pkg-test/zed.jsonic"', { multisource: { path: filePath } }), { z: { zed: 99 } });
     });
     (0, node_test_1.test)('pkg-fs-error', () => {
         const brokenFs = {
@@ -369,8 +366,7 @@ const path_1 = require("@jsonic/path");
             .use(multisource_1.MultiSource, {
             resolver: (0, pkg_1.makePkgResolver)({ require })
         });
-        (0, code_1.expect)(() => j1('x:@"/nonexistent.jsonic"', { fs: brokenFs, multisource: { path: '/' } }))
-            .throws(/not_found/);
+        node_assert_1.default.throws(() => j1('x:@"/nonexistent.jsonic"', { fs: brokenFs, multisource: { path: '/' } }), /not_found/);
     });
     (0, node_test_1.test)('pkg-load-failure', () => {
         const errorFs = {
@@ -383,8 +379,7 @@ const path_1 = require("@jsonic/path");
             resolver: (0, pkg_1.makePkgResolver)({ require })
         });
         // existsSync returns true but readFileSync throws - covers load catch
-        (0, code_1.expect)(() => j1('x:@"/data.jsonic"', { fs: errorFs, multisource: { path: '/' } }))
-            .throws(/not_found/);
+        node_assert_1.default.throws(() => j1('x:@"/data.jsonic"', { fs: errorFs, multisource: { path: '/' } }), /not_found/);
     });
     (0, node_test_1.test)('pkg-node-modules-walk', () => {
         const j1 = jsonic_1.Jsonic.make()
@@ -395,15 +390,14 @@ const path_1 = require("@jsonic/path");
         });
         // Initial require.resolve fails with bad paths,
         // then node_modules walk (no virtual fs) finds the package
-        (0, code_1.expect)(j1('z:@"jsonic-multisource-pkg-test/zed.jsonic"', { multisource: { path: process.cwd() } }))
-            .equal({ z: { zed: 99 } });
+        node_assert_1.default.deepEqual(j1('z:@"jsonic-multisource-pkg-test/zed.jsonic"', { multisource: { path: process.cwd() } }), { z: { zed: 99 } });
     });
     (0, node_test_1.test)('file-implicit', () => {
         let j0 = jsonic_1.Jsonic.make().use(multisource_1.MultiSource, {
             resolver: (0, file_1.makeFileResolver)(),
         });
         // File without extension - found via implicit extension and potentials loop
-        (0, code_1.expect)(j0('a:1,b:@"t01"', { multisource: { path: process.cwd() + '/test' } })).equal({ a: 1, b: { c: 2 } });
+        node_assert_1.default.deepEqual(j0('a:1,b:@"t01"', { multisource: { path: process.cwd() + '/test' } }), { a: 1, b: { c: 2 } });
     });
     (0, node_test_1.test)('file-pathfinder', () => {
         let j0 = jsonic_1.Jsonic.make().use(multisource_1.MultiSource, {
@@ -411,7 +405,7 @@ const path_1 = require("@jsonic/path");
                 return '../test/' + spec;
             }),
         });
-        (0, code_1.expect)(j0('b:@"t01.jsonic"', { multisource: { path: __dirname } })).equal({ b: { c: 2 } });
+        node_assert_1.default.deepEqual(j0('b:@"t01.jsonic"', { multisource: { path: __dirname } }), { b: { c: 2 } });
     });
     (0, node_test_1.test)('spec-object', () => {
         const o = {
@@ -421,7 +415,7 @@ const path_1 = require("@jsonic/path");
         };
         const j = jsonic_1.Jsonic.make().use(multisource_1.MultiSource, o);
         // spec as object with path property - covers resolvePathSpec spec.path branch
-        (0, code_1.expect)(j('x:@{path:"a.jsonic"}')).equal({ x: { a: 1 } });
+        node_assert_1.default.deepEqual(j('x:@{path:"a.jsonic"}'), { x: { a: 1 } });
     });
     (0, node_test_1.test)('merge', () => {
         const o = {
@@ -436,7 +430,7 @@ const path_1 = require("@jsonic/path");
                 merge: (prev, curr) => Object.assign({}, prev, curr)
             }
         });
-        (0, code_1.expect)(j('x:2 @a.jsonic')).equal({ x: 2, a: 1 });
+        node_assert_1.default.deepEqual(j('x:2 @a.jsonic'), { x: 2, a: 1 });
     });
     (0, node_test_1.test)('assign', () => {
         const o = {
@@ -451,7 +445,7 @@ const path_1 = require("@jsonic/path");
                 extend: false
             }
         });
-        (0, code_1.expect)(j('x:2 @a.jsonic')).equal({ x: 2, a: 1 });
+        node_assert_1.default.deepEqual(j('x:2 @a.jsonic'), { x: 2, a: 1 });
     });
     (0, node_test_1.test)('js-default-export', () => {
         let j0 = jsonic_1.Jsonic.make().use(multisource_1.MultiSource, {
@@ -459,7 +453,7 @@ const path_1 = require("@jsonic/path");
         });
         // JS module with exports.default - tests the out.default branch in js.ts
         let deps = {};
-        (0, code_1.expect)(j0('a:1,d:@"../test/k05.js"', { multisource: { path: __dirname, deps } })).equal({ a: 1, d: { f: 5 } });
+        node_assert_1.default.deepEqual(j0('a:1,d:@"../test/k05.js"', { multisource: { path: __dirname, deps } }), { a: 1, d: { f: 5 } });
     });
     (0, node_test_1.test)('jsonic-null-src', () => {
         const o = {
@@ -473,7 +467,7 @@ const path_1 = require("@jsonic/path");
         };
         const j = jsonic_1.Jsonic.make().use(multisource_1.MultiSource, o);
         // Covers the null src/full guard in jsonic processor
-        (0, code_1.expect)(j('x:@"foo"')).equal({ x: null });
+        node_assert_1.default.deepEqual(j('x:@"foo"'), { x: null });
     });
 });
 //# sourceMappingURL=multisource.test.js.map

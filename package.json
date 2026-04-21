@@ -45,8 +45,6 @@
     "./processor/jsonic": "./dist/processor/jsonic.js"
   },
   "devDependencies": {
-    "@hapi/code": "^9.0.3",
-    "@jsonic/path": "github:jsonicjs/path#main",
     "@types/node": "^25.4.0",
     "jsonic-multisource-pkg-test": "^0.0.1",
     "memfs": "^4.56.11",
