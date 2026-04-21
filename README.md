@@ -1,5 +1,7 @@
 # multisource
-Load partial values from multiple sources, such as other files.
+
+Load partial values from multiple sources (files, packages, memory) into a
+single [Jsonic](https://jsonic.senecajs.org) parse result.
 
 
 [![npm version](https://img.shields.io/npm/v/@jsonic/multisource.svg)](https://npmjs.com/package/@jsonic/multisource)
@@ -14,43 +16,49 @@ Load partial values from multiple sources, such as other files.
 | ---------------------------------------------------- | --------------------------------------------------------------------------------------- |
 
 
+## Documentation
 
-## Basic Example
+Documentation for both language implementations follows the
+[Diátaxis](https://diataxis.fr) framework (Tutorials, How-to guides,
+Explanation, Reference).
+
+- TypeScript: [`doc/multisource-ts.md`](doc/multisource-ts.md)
+- Go: [`doc/multisource-go.md`](doc/multisource-go.md)
 
 
-```yml
-# file: foo.jsonic
-a:1
-```
+## Quick Example
 
 ```ts
-import { Jsonic } from '@jsonic/jsonic-next'
-import { MultiSource } from '@jsonic/multisource'
+// file: foo.jsonic
+//   a:1
+
+import { Jsonic } from 'jsonic'
+import MultiSource from '@jsonic/multisource'
 import { makeFileResolver } from '@jsonic/multisource/resolver/file'
 
-let j = Jsonic.make().use(MultiSource, {
+const j = Jsonic.make().use(MultiSource, {
   resolver: makeFileResolver(),
 })
 
-const out = j('@"foo.jsonic" b:2')
-// out === { a:1, b:2 }
+j('@"foo.jsonic" b:2')
+// => { a: 1, b: 2 }
+```
 
+```go
+import (
+    jsonic "github.com/jsonicjs/jsonic/go"
+    multisource "github.com/jsonicjs/multisource/go"
+)
+
+files := map[string]string{"foo.jsonic": "a:1"}
+j := multisource.MakeJsonic(multisource.MultiSourceOptions{
+    Resolver: multisource.MakeMemResolver(files),
+})
+out, _ := j.Parse(`{@foo.jsonic, b:2}`)
+// => map[a:1 b:2]
 ```
 
 
+## License
 
-<!--START:options-->
-## Options
-* _implictExt_
-  * _0_: `string` (default: jsonic) - 0
-  * _1_: `string` (default: jsc) - 1
-  * _2_: `string` (default: json) - 2
-  * _3_: `string` (default: js) - 3
-* _markchar_: `string` (default: @) - markchar
-* _processor_
-  * __: `function` (default: (res) => (res.val = process(res.src, res))) - 
-  * _js_: `instance` (required) - js
-  * _jsc_: `instance` (required) - jsc
-  * _json_: `function` (default: (res) => (res.val = process(res.src, res))) - json
-  * _jsonic_: `instance` (required) - jsonic
-<!--END:options-->
+MIT © Richard Rodger and contributors.

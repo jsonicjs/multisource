@@ -77,61 +77,52 @@ func MultiSource(j *jsonic.Jsonic, pluginOpts map[string]any) error {
 			}
 		},
 		Custom: func(j *jsonic.Jsonic, cfg directive.DirectiveConfig) {
-			OPEN := cfg.OPEN
 			name := cfg.Name
+			openToken := "#OD_" + name
+			topCounter := name + "_top"
 
 			// Handle special case of @foo first token - assume a map.
-			j.Rule("val", func(rs *jsonic.RuleSpec) {
-				rs.PrependOpen(
-					&jsonic.AltSpec{
-						S: [][]jsonic.Tin{{OPEN}},
-						C: func(r *jsonic.Rule, ctx *jsonic.Context) bool {
-							return r.N["pk"] > 0
-						},
-						B: 1,
-						G: name + "_undive",
-					},
-					&jsonic.AltSpec{
-						S: [][]jsonic.Tin{{OPEN}},
-						C: func(r *jsonic.Rule, ctx *jsonic.Context) bool {
-							return r.D == 0
-						},
-						P: "map",
-						B: 1,
-						N: map[string]int{name + "_top": 1},
-					},
-				)
-			})
-
-			j.Rule("map", func(rs *jsonic.RuleSpec) {
-				rs.PrependOpen(&jsonic.AltSpec{
-					S: [][]jsonic.Tin{{OPEN}},
-					C: func(r *jsonic.Rule, ctx *jsonic.Context) bool {
-						return r.D == 1 && r.N[name+"_top"] == 1
-					},
-					P: "pair",
-					B: 1,
-				})
-				rs.PrependClose(&jsonic.AltSpec{
-					S: [][]jsonic.Tin{{OPEN}},
-					C: func(r *jsonic.Rule, ctx *jsonic.Context) bool {
+			err := j.Grammar(&jsonic.GrammarSpec{
+				Ref: map[jsonic.FuncRef]any{
+					"@pk-pos": jsonic.AltCond(func(r *jsonic.Rule, ctx *jsonic.Context) bool {
 						return r.N["pk"] > 0
+					}),
+					"@d-zero": jsonic.AltCond(func(r *jsonic.Rule, ctx *jsonic.Context) bool {
+						return r.D == 0
+					}),
+					"@d-one-top": jsonic.AltCond(func(r *jsonic.Rule, ctx *jsonic.Context) bool {
+						return r.D == 1 && r.N[topCounter] == 1
+					}),
+				},
+				Rule: map[string]*jsonic.GrammarRuleSpec{
+					"val": {
+						Open: []*jsonic.GrammarAltSpec{
+							{S: openToken, C: "@pk-pos", B: 1},
+							{S: openToken, C: "@d-zero", P: "map", B: 1, N: map[string]int{topCounter: 1}},
+						},
 					},
-					B: 1,
-					G: name + "_undive",
-				})
-			})
-
-			j.Rule("pair", func(rs *jsonic.RuleSpec) {
-				rs.PrependClose(&jsonic.AltSpec{
-					S: [][]jsonic.Tin{{OPEN}},
-					C: func(r *jsonic.Rule, ctx *jsonic.Context) bool {
-						return r.N["pk"] > 0
+					"map": {
+						Open: []*jsonic.GrammarAltSpec{
+							{S: openToken, C: "@d-one-top", P: "pair", B: 1},
+						},
+						Close: []*jsonic.GrammarAltSpec{
+							{S: openToken, C: "@pk-pos", B: 1},
+						},
 					},
-					B: 1,
-					G: name + "_undive",
-				})
+					"pair": {
+						Close: []*jsonic.GrammarAltSpec{
+							{S: openToken, C: "@pk-pos", B: 1},
+						},
+					},
+				},
+			}, &jsonic.GrammarSetting{
+				Rule: &jsonic.GrammarSettingRule{
+					Alt: &jsonic.GrammarSettingAlt{G: name},
+				},
 			})
+			if err != nil {
+				panic(err)
+			}
 		},
 	}
 

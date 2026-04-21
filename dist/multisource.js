@@ -151,44 +151,47 @@ const MultiSource = (jsonic, popts) => {
         },
         custom: (jsonic, { OPEN, name }) => {
             // Handle special case of @foo first token - assume a map
-            jsonic.rule('val', (rs) => {
-                rs.open([
-                    {
-                        s: [OPEN],
-                        c: (r) => 0 < r.n.pk && 'pair' != r.parent.name,
-                        b: 1,
-                        g: name + '_undive',
+            jsonic.grammar({
+                rule: {
+                    val: {
+                        open: [
+                            {
+                                s: [OPEN],
+                                c: (r) => 0 < r.n.pk && 'pair' != r.parent.name,
+                                b: 1,
+                            },
+                            {
+                                s: [OPEN],
+                                c: (r) => 0 === r.d,
+                                p: 'map',
+                                b: 1,
+                                n: { [name + '_top']: 1 },
+                            },
+                        ],
                     },
-                    ,
-                    {
-                        s: [OPEN],
-                        c: (r) => 0 === r.d,
-                        p: 'map',
-                        b: 1,
-                        n: { [name + '_top']: 1 },
-                    }
-                ]);
-            });
-            jsonic.rule('map', (rs) => {
-                rs.open({
-                    s: [OPEN],
-                    c: (r) => 1 === r.d && 1 === r.n[name + '_top'],
-                    p: 'pair',
-                    b: 1,
-                }).close({
-                    s: [OPEN],
-                    c: (r) => 0 < r.n.pk,
-                    b: 1,
-                    g: name + '_undive',
-                });
-            });
-            jsonic.rule('pair', (rs) => {
-                rs.close({
-                    s: [OPEN],
-                    c: (r) => 0 < r.n.pk,
-                    b: 1,
-                    g: name + '_undive',
-                });
+                    map: {
+                        open: [{
+                                s: [OPEN],
+                                c: (r) => 1 === r.d && 1 === r.n[name + '_top'],
+                                p: 'pair',
+                                b: 1,
+                            }],
+                        close: [{
+                                s: [OPEN],
+                                c: (r) => 0 < r.n.pk,
+                                b: 1,
+                            }],
+                    },
+                    pair: {
+                        close: [{
+                                s: [OPEN],
+                                c: (r) => 0 < r.n.pk,
+                                b: 1,
+                            }],
+                    },
+                },
+            }, {
+                rule: { alt: { g: name } },
             });
         },
     };
