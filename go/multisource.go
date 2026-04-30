@@ -11,7 +11,7 @@ import (
 )
 
 // Version is the Go module release version.
-const Version = "0.1.3"
+const Version = "0.1.4"
 
 // MultiSourceOptions configures the multisource parser.
 type MultiSourceOptions struct {
