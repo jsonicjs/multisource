@@ -1,4 +1,10 @@
 import { Resolver } from '../multisource';
 type PathFinder = (spec: any) => string;
-export declare function makeFileResolver(pathfinder?: PathFinder): Resolver;
+type FileResolverOptions = {
+    pathfinder?: PathFinder;
+    preload?: {
+        [fullpath: string]: string;
+    };
+};
+export declare function makeFileResolver(pathfinderOrOpts?: PathFinder | FileResolverOptions): Resolver;
 export {};

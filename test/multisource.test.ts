@@ -7,7 +7,7 @@ import { memfs } from 'memfs'
 
 import { Jsonic } from 'jsonic'
 import { Debug } from 'jsonic/debug'
-import { MultiSource, MultiSourceOptions } from '../dist/multisource'
+import { MultiSource, MultiSourceOptions, preloadFiles } from '../dist/multisource'
 // import { makeJavaScriptProcessor } from '../dist/processor/js'
 import { makeMemResolver } from '../dist/resolver/mem'
 import { makeFileResolver } from '../dist/resolver/file'
@@ -642,6 +642,125 @@ describe('multisource', () => {
 
     // Covers the null src/full guard in jsonic processor
     assert.deepEqual(j('x:@"foo"'), { x: null })
+  })
+
+
+  test('preload-basic', () => {
+    const Fs = require('node:fs')
+    const Path = require('node:path')
+
+    // Use the existing test fixtures
+    const testDir = Path.resolve(__dirname, '..', 'test')
+
+    const filemap = preloadFiles({
+      folders: [testDir],
+      ext: ['.jsonic'],
+    })
+
+    // Should have loaded the test .jsonic files
+    const keys = Object.keys(filemap)
+    assert.ok(keys.length > 0, 'preloadFiles should find .jsonic files')
+
+    // Check a known file is loaded
+    const t01Path = Path.resolve(testDir, 't01.jsonic')
+    assert.ok(filemap[t01Path], 't01.jsonic should be preloaded')
+    assert.strictEqual(filemap[t01Path], Fs.readFileSync(t01Path).toString())
+  })
+
+
+  test('preload-extensions', () => {
+    const Path = require('node:path')
+    const testDir = Path.resolve(__dirname, '..', 'test')
+
+    // Default extensions: .jsonic, .json
+    const defaultMap = preloadFiles({ folders: [testDir] })
+    const defaultKeys = Object.keys(defaultMap)
+    assert.ok(defaultKeys.some(k => k.endsWith('.jsonic')))
+    assert.ok(defaultKeys.some(k => k.endsWith('.json')))
+    assert.ok(!defaultKeys.some(k => k.endsWith('.js')))
+
+    // Custom extensions
+    const jsMap = preloadFiles({ folders: [testDir], ext: ['.js'] })
+    const jsKeys = Object.keys(jsMap)
+    assert.ok(jsKeys.some(k => k.endsWith('.js')))
+    assert.ok(!jsKeys.some(k => k.endsWith('.jsonic')))
+  })
+
+
+  test('preload-recursive', () => {
+    const Path = require('node:path')
+    const testDir = Path.resolve(__dirname, '..', 'test')
+
+    // Non-recursive (default): should not find files in f01/
+    const flatMap = preloadFiles({ folders: [testDir], ext: ['.jsonic'] })
+    const flatKeys = Object.keys(flatMap)
+    assert.ok(!flatKeys.some(k => k.includes('f01')),
+      'non-recursive should not descend into f01/')
+
+    // Recursive: should find files in f01/
+    const deepMap = preloadFiles({
+      folders: [testDir],
+      ext: ['.jsonic'],
+      recursive: true,
+    })
+    const deepKeys = Object.keys(deepMap)
+    assert.ok(deepKeys.some(k => k.includes('f01')),
+      'recursive should find files in f01/')
+  })
+
+
+  test('preload-file-resolver', () => {
+    const Path = require('node:path')
+    const testDir = Path.resolve(__dirname, '..', 'test')
+
+    // Preload all .jsonic files
+    const filemap = preloadFiles({
+      folders: [testDir],
+      ext: ['.jsonic'],
+      recursive: true,
+    })
+
+    // Create a file resolver with preloaded files
+    const o: MultiSourceOptions = {
+      resolver: makeFileResolver({ preload: filemap }),
+      path: testDir,
+    }
+    const j = Jsonic.make().use(MultiSource, o)
+
+    const result = j('@"t01.jsonic"')
+    assert.deepEqual(result, { c: 2 })
+  })
+
+
+  test('preload-multiple-folders', () => {
+    const Path = require('node:path')
+    const testDir = Path.resolve(__dirname, '..', 'test')
+    const f01Dir = Path.resolve(testDir, 'f01')
+
+    // Scan root (non-recursive) and f01 separately
+    const rootOnly = preloadFiles({ folders: [testDir], ext: ['.jsonic'] })
+    const f01Only = preloadFiles({ folders: [f01Dir], ext: ['.jsonic'] })
+
+    assert.ok(Object.keys(rootOnly).length > 0, 'should have files from test root')
+    assert.ok(Object.keys(f01Only).length > 0, 'should have files from f01/')
+
+    // Combined scan should have files from both
+    const combined = preloadFiles({
+      folders: [testDir, f01Dir],
+      ext: ['.jsonic'],
+    })
+    const combinedKeys = Object.keys(combined)
+    assert.ok(combinedKeys.length >= Object.keys(rootOnly).length)
+    assert.ok(combinedKeys.length >= Object.keys(f01Only).length)
+  })
+
+
+  test('preload-missing-folder', () => {
+    // Should not throw for non-existent folders
+    const filemap = preloadFiles({
+      folders: ['/nonexistent/folder/path'],
+    })
+    assert.deepEqual(filemap, {})
   })
 
 })

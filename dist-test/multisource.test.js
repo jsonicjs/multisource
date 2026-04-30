@@ -469,5 +469,96 @@ const path_1 = require("@jsonic/path");
         // Covers the null src/full guard in jsonic processor
         node_assert_1.default.deepEqual(j('x:@"foo"'), { x: null });
     });
+    (0, node_test_1.test)('preload-basic', () => {
+        const Fs = require('node:fs');
+        const Path = require('node:path');
+        // Use the existing test fixtures
+        const testDir = Path.resolve(__dirname, '..', 'test');
+        const filemap = (0, multisource_1.preloadFiles)({
+            folders: [testDir],
+            ext: ['.jsonic'],
+        });
+        // Should have loaded the test .jsonic files
+        const keys = Object.keys(filemap);
+        node_assert_1.default.ok(keys.length > 0, 'preloadFiles should find .jsonic files');
+        // Check a known file is loaded
+        const t01Path = Path.resolve(testDir, 't01.jsonic');
+        node_assert_1.default.ok(filemap[t01Path], 't01.jsonic should be preloaded');
+        node_assert_1.default.strictEqual(filemap[t01Path], Fs.readFileSync(t01Path).toString());
+    });
+    (0, node_test_1.test)('preload-extensions', () => {
+        const Path = require('node:path');
+        const testDir = Path.resolve(__dirname, '..', 'test');
+        // Default extensions: .jsonic, .json
+        const defaultMap = (0, multisource_1.preloadFiles)({ folders: [testDir] });
+        const defaultKeys = Object.keys(defaultMap);
+        node_assert_1.default.ok(defaultKeys.some(k => k.endsWith('.jsonic')));
+        node_assert_1.default.ok(defaultKeys.some(k => k.endsWith('.json')));
+        node_assert_1.default.ok(!defaultKeys.some(k => k.endsWith('.js')));
+        // Custom extensions
+        const jsMap = (0, multisource_1.preloadFiles)({ folders: [testDir], ext: ['.js'] });
+        const jsKeys = Object.keys(jsMap);
+        node_assert_1.default.ok(jsKeys.some(k => k.endsWith('.js')));
+        node_assert_1.default.ok(!jsKeys.some(k => k.endsWith('.jsonic')));
+    });
+    (0, node_test_1.test)('preload-recursive', () => {
+        const Path = require('node:path');
+        const testDir = Path.resolve(__dirname, '..', 'test');
+        // Non-recursive (default): should not find files in f01/
+        const flatMap = (0, multisource_1.preloadFiles)({ folders: [testDir], ext: ['.jsonic'] });
+        const flatKeys = Object.keys(flatMap);
+        node_assert_1.default.ok(!flatKeys.some(k => k.includes('f01')), 'non-recursive should not descend into f01/');
+        // Recursive: should find files in f01/
+        const deepMap = (0, multisource_1.preloadFiles)({
+            folders: [testDir],
+            ext: ['.jsonic'],
+            recursive: true,
+        });
+        const deepKeys = Object.keys(deepMap);
+        node_assert_1.default.ok(deepKeys.some(k => k.includes('f01')), 'recursive should find files in f01/');
+    });
+    (0, node_test_1.test)('preload-file-resolver', () => {
+        const Path = require('node:path');
+        const testDir = Path.resolve(__dirname, '..', 'test');
+        // Preload all .jsonic files
+        const filemap = (0, multisource_1.preloadFiles)({
+            folders: [testDir],
+            ext: ['.jsonic'],
+            recursive: true,
+        });
+        // Create a file resolver with preloaded files
+        const o = {
+            resolver: (0, file_1.makeFileResolver)({ preload: filemap }),
+            path: testDir,
+        };
+        const j = jsonic_1.Jsonic.make().use(multisource_1.MultiSource, o);
+        const result = j('@"t01.jsonic"');
+        node_assert_1.default.deepEqual(result, { c: 2 });
+    });
+    (0, node_test_1.test)('preload-multiple-folders', () => {
+        const Path = require('node:path');
+        const testDir = Path.resolve(__dirname, '..', 'test');
+        const f01Dir = Path.resolve(testDir, 'f01');
+        // Scan root (non-recursive) and f01 separately
+        const rootOnly = (0, multisource_1.preloadFiles)({ folders: [testDir], ext: ['.jsonic'] });
+        const f01Only = (0, multisource_1.preloadFiles)({ folders: [f01Dir], ext: ['.jsonic'] });
+        node_assert_1.default.ok(Object.keys(rootOnly).length > 0, 'should have files from test root');
+        node_assert_1.default.ok(Object.keys(f01Only).length > 0, 'should have files from f01/');
+        // Combined scan should have files from both
+        const combined = (0, multisource_1.preloadFiles)({
+            folders: [testDir, f01Dir],
+            ext: ['.jsonic'],
+        });
+        const combinedKeys = Object.keys(combined);
+        node_assert_1.default.ok(combinedKeys.length >= Object.keys(rootOnly).length);
+        node_assert_1.default.ok(combinedKeys.length >= Object.keys(f01Only).length);
+    });
+    (0, node_test_1.test)('preload-missing-folder', () => {
+        // Should not throw for non-existent folders
+        const filemap = (0, multisource_1.preloadFiles)({
+            folders: ['/nonexistent/folder/path'],
+        });
+        node_assert_1.default.deepEqual(filemap, {});
+    });
 });
 //# sourceMappingURL=multisource.test.js.map

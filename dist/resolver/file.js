@@ -39,7 +39,16 @@ const SystemFs = __importStar(require("node:fs"));
 const Path = __importStar(require("node:path"));
 const multisource_1 = require("../multisource");
 const mem_1 = require("./mem");
-function makeFileResolver(pathfinder) {
+function makeFileResolver(pathfinderOrOpts) {
+    let pathfinder;
+    let preload;
+    if ('function' === typeof pathfinderOrOpts) {
+        pathfinder = pathfinderOrOpts;
+    }
+    else if (null != pathfinderOrOpts) {
+        pathfinder = pathfinderOrOpts.pathfinder;
+        preload = pathfinderOrOpts.preload;
+    }
     return function FileResolver(spec, popts, _rule, ctx) {
         const fs = ctx.meta?.fs || SystemFs;
         const foundSpec = pathfinder ? pathfinder(spec) : spec;
@@ -49,7 +58,8 @@ function makeFileResolver(pathfinder) {
         if (null != ps.full) {
             ps.full = Path.resolve(ps.full);
             search.push(ps.full);
-            src = load(ps.full, fs);
+            // Check preloaded files first, then fall back to disk.
+            src = preload?.[ps.full] ?? load(ps.full, fs);
             if (null == src) {
                 const potentials = [];
                 // Special case: support npm linked references
@@ -69,7 +79,8 @@ function makeFileResolver(pathfinder) {
                 }
                 search.push(...potentials);
                 for (let path of potentials) {
-                    if (null != (src = load(path, fs))) {
+                    src = preload?.[path] ?? load(path, fs);
+                    if (null != src) {
                         ps.full = path;
                         ps.kind = (path.match(/\.([^.]*)$/) || [multisource_1.NONE, multisource_1.NONE])[1];
                         break;

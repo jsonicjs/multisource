@@ -22,6 +22,14 @@ interface MultiSourceMeta {
 // Unknown source reference file extension.
 const NONE = ''
 
+// Preload configuration: read all matching files from specified folders
+// into memory before parsing starts, avoiding per-file I/O during parse.
+type PreloadOptions = {
+  folders: string[]               // Folders to scan (non-recursive by default)
+  ext?: string[]                  // File extensions to load (default: ['.jsonic', '.json'])
+  recursive?: boolean             // Recurse into subfolders (default: false)
+}
+
 // Options for this plugin.
 type MultiSourceOptions = {
   resolver: Resolver // Resolve multisource spec to source
@@ -29,6 +37,7 @@ type MultiSourceOptions = {
   markchar?: string // Character to mark start of multisource directive
   processor?: { [kind: string]: Processor }
   implictExt?: []
+  preload?: PreloadOptions // Preload files from folders into memory
 }
 
 // The path to the source, including base prefix (if any).
@@ -350,6 +359,56 @@ function resolvePathSpec(
   return res
 }
 
+// Preload all files matching the given extensions from the specified folders
+// into a flat map keyed by full resolved path.
+function preloadFiles(
+  opts: PreloadOptions,
+  fs?: FST,
+): { [fullpath: string]: string } {
+  const _fs = fs || SystemFs
+  const Path = require('node:path')
+  const ext = (opts.ext || ['.jsonic', '.json']).map(e =>
+    e.startsWith('.') ? e : '.' + e
+  )
+  const recursive = opts.recursive || false
+  const filemap: { [fullpath: string]: string } = {}
+
+  function scanFolder(folder: string) {
+    let entries: string[]
+    try {
+      entries = _fs.readdirSync(folder) as unknown as string[]
+    } catch (_e) {
+      return
+    }
+    for (const name of entries) {
+      const full = Path.resolve(folder, name)
+      let stat
+      try {
+        stat = _fs.statSync(full)
+      } catch (_e) {
+        continue
+      }
+      if (stat.isDirectory()) {
+        if (recursive) scanFolder(full)
+      }
+      else if (stat.isFile()) {
+        if (ext.some((e: string) => name.endsWith(e))) {
+          try {
+            filemap[full] = _fs.readFileSync(full).toString()
+          } catch (_e) { /* skip unreadable */ }
+        }
+      }
+    }
+  }
+
+  for (const folder of opts.folders) {
+    scanFolder(Path.resolve(folder))
+  }
+
+  return filemap
+}
+
+
 // Plugin meta data
 const meta = {
   name: 'MultiSource',
@@ -360,6 +419,7 @@ export type {
   Resolution,
   Processor,
   MultiSourceOptions,
+  PreloadOptions,
   Dependency,
   DependencyMap,
   MultiSourceMeta,
@@ -367,5 +427,5 @@ export type {
   FST,
 }
 
-export { MultiSource, resolvePathSpec, NONE, TOP, meta }
+export { MultiSource, resolvePathSpec, preloadFiles, NONE, TOP, meta }
 

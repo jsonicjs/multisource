@@ -7,6 +7,11 @@ interface MultiSourceMeta {
     deps?: DependencyMap;
 }
 declare const NONE = "";
+type PreloadOptions = {
+    folders: string[];
+    ext?: string[];
+    recursive?: boolean;
+};
 type MultiSourceOptions = {
     resolver: Resolver;
     path?: string;
@@ -15,6 +20,7 @@ type MultiSourceOptions = {
         [kind: string]: Processor;
     };
     implictExt?: [];
+    preload?: PreloadOptions;
 };
 type PathSpec = {
     kind: string;
@@ -44,8 +50,11 @@ type DependencyMap = {
 declare const TOP: unique symbol;
 declare const MultiSource: Plugin;
 declare function resolvePathSpec(popts: MultiSourceOptions, ctx: Context, spec: any, resolvefolder: (path: string, fs: FST) => string): PathSpec;
+declare function preloadFiles(opts: PreloadOptions, fs?: FST): {
+    [fullpath: string]: string;
+};
 declare const meta: {
     name: string;
 };
-export type { Resolver, Resolution, Processor, MultiSourceOptions, Dependency, DependencyMap, MultiSourceMeta, PathSpec, FST, };
-export { MultiSource, resolvePathSpec, NONE, TOP, meta };
+export type { Resolver, Resolution, Processor, MultiSourceOptions, PreloadOptions, Dependency, DependencyMap, MultiSourceMeta, PathSpec, FST, };
+export { MultiSource, resolvePathSpec, preloadFiles, NONE, TOP, meta };

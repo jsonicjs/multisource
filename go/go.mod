@@ -3,7 +3,7 @@ module github.com/jsonicjs/multisource/go
 go 1.24.7
 
 require (
-	github.com/jsonicjs/directive/go v0.1.3
-	github.com/jsonicjs/jsonic/go v0.1.19
-	github.com/jsonicjs/path/go v0.1.1
+	github.com/jsonicjs/directive/go v0.1.4
+	github.com/jsonicjs/jsonic/go v0.1.22
+	github.com/jsonicjs/path/go v0.1.2
 )

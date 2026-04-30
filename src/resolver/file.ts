@@ -9,7 +9,25 @@ import { buildPotentials } from './mem'
 
 type PathFinder = (spec: any) => string
 
-export function makeFileResolver(pathfinder?: PathFinder): Resolver {
+type FileResolverOptions = {
+  pathfinder?: PathFinder
+  preload?: { [fullpath: string]: string }  // Preloaded file contents by full path
+}
+
+export function makeFileResolver(
+  pathfinderOrOpts?: PathFinder | FileResolverOptions
+): Resolver {
+
+  let pathfinder: PathFinder | undefined
+  let preload: { [fullpath: string]: string } | undefined
+
+  if ('function' === typeof pathfinderOrOpts) {
+    pathfinder = pathfinderOrOpts
+  }
+  else if (null != pathfinderOrOpts) {
+    pathfinder = pathfinderOrOpts.pathfinder
+    preload = pathfinderOrOpts.preload
+  }
 
   return function FileResolver(
     spec: any,
@@ -29,7 +47,9 @@ export function makeFileResolver(pathfinder?: PathFinder): Resolver {
       ps.full = Path.resolve(ps.full)
 
       search.push(ps.full)
-      src = load(ps.full, fs)
+
+      // Check preloaded files first, then fall back to disk.
+      src = preload?.[ps.full] ?? load(ps.full, fs)
 
       if (null == src) {
         const potentials: string[] = []
@@ -55,7 +75,8 @@ export function makeFileResolver(pathfinder?: PathFinder): Resolver {
         search.push(...potentials)
 
         for (let path of potentials) {
-          if (null != (src = load(path, fs))) {
+          src = preload?.[path] ?? load(path, fs)
+          if (null != src) {
             ps.full = path
             ps.kind = (path.match(/\.([^.]*)$/) || [NONE, NONE])[1]
             break

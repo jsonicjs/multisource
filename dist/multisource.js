@@ -36,6 +36,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.meta = exports.TOP = exports.NONE = exports.MultiSource = void 0;
 exports.resolvePathSpec = resolvePathSpec;
+exports.preloadFiles = preloadFiles;
 const SystemFs = __importStar(require("node:fs"));
 const jsonic_1 = require("jsonic");
 const directive_1 = require("@jsonic/directive");
@@ -262,6 +263,50 @@ function resolvePathSpec(popts, ctx, spec, resolvefolder) {
         found: false,
     };
     return res;
+}
+// Preload all files matching the given extensions from the specified folders
+// into a flat map keyed by full resolved path.
+function preloadFiles(opts, fs) {
+    const _fs = fs || SystemFs;
+    const Path = require('node:path');
+    const ext = (opts.ext || ['.jsonic', '.json']).map(e => e.startsWith('.') ? e : '.' + e);
+    const recursive = opts.recursive || false;
+    const filemap = {};
+    function scanFolder(folder) {
+        let entries;
+        try {
+            entries = _fs.readdirSync(folder);
+        }
+        catch (_e) {
+            return;
+        }
+        for (const name of entries) {
+            const full = Path.resolve(folder, name);
+            let stat;
+            try {
+                stat = _fs.statSync(full);
+            }
+            catch (_e) {
+                continue;
+            }
+            if (stat.isDirectory()) {
+                if (recursive)
+                    scanFolder(full);
+            }
+            else if (stat.isFile()) {
+                if (ext.some((e) => name.endsWith(e))) {
+                    try {
+                        filemap[full] = _fs.readFileSync(full).toString();
+                    }
+                    catch (_e) { /* skip unreadable */ }
+                }
+            }
+        }
+    }
+    for (const folder of opts.folders) {
+        scanFolder(Path.resolve(folder));
+    }
+    return filemap;
 }
 // Plugin meta data
 const meta = {
