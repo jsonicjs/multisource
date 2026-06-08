@@ -10,9 +10,13 @@ into a single parse result. A directive character (`@` by default) marks a
 reference; the plugin resolves it, processes the resolved text, and splices
 the result into the parse output.
 
-The repository ships **two implementations**:
+The repository ships **two implementations**, side by side, mirroring the
+layout of [`github.com/voxgig/util`](https://github.com/voxgig/util):
 
-- **TypeScript** — `src/`, tests in `test/`, built to `dist/` + `dist-test/`.
+- **TypeScript** — lives entirely under `ts/`: sources in `ts/src/`, tests in
+  `ts/test/`, built to `ts/dist/` + `ts/dist-test/`. The npm package
+  (`ts/package.json`) is published from `ts/`, and all its paths are relative
+  to that folder.
 - **Go** — `go/`, a port published as the `github.com/jsonicjs/multisource/go`
   module.
 
@@ -37,17 +41,19 @@ Use the `Makefile` targets (they wrap npm and go):
 ```sh
 make build      # build-ts + build-go
 make test       # test-ts + test-go
-make build-ts   # npm run build   (tsc --build src test)
-make test-ts    # npm test        (node --test dist-test/*.test.js)
+make build-ts   # cd ts && npm run build   (tsc --build src test)
+make test-ts    # cd ts && npm test        (node --test dist-test/*.test.js)
 make build-go   # cd go && go build ./...
 make test-go    # cd go && go test ./...
 ```
 
 Notes:
 
-- TS tests run against the **built** output in `dist-test/`, so run
-  `make build-ts` (or `npm run build`) before `make test-ts`.
-- `npm run reset` does a clean reinstall + build + test.
+- The TypeScript package lives in `ts/`; run npm commands from there
+  (`cd ts && npm ...`) or use the `make` targets, which `cd ts` for you.
+- TS tests run against the **built** output in `ts/dist-test/`, so run
+  `make build-ts` (or `cd ts && npm run build`) before `make test-ts`.
+- `cd ts && npm run reset` does a clean reinstall + build + test.
 - Go has no external runtime deps beyond the other `jsonicjs/*/go` modules.
 
 ## Resolver & processor parity
