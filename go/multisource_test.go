@@ -230,10 +230,19 @@ func TestBuildPotentials(t *testing.T) {
 	assert(t, "pot-2", p[2], "foo.jsc")
 	assert(t, "pot-3", p[3], "foo.json")
 	assert(t, "pot-idx-1", p[4], "foo/index.jsonic")
+	assert(t, "pot-idx-folder", p[7], "foo/index.foo.jsonic")
 
 	p = buildPotentials("bar.json", exts)
 	assert(t, "has-ext", len(p), 1)
 	assert(t, "has-ext-0", p[0], "bar.json")
+
+	// Windows-style (backslash) paths must extract the final segment, not the
+	// whole path, for the folder-name index variant. Regression guard: the
+	// `path` package only splits on '/', so filepath.Abs output on Windows
+	// (backslashes) would otherwise corrupt the folder name.
+	w := buildPotentials(`C:\proj\h`, exts)
+	assert(t, "win-no-ext", len(w), 10)
+	assert(t, "win-folder-index", w[7], `C:\proj\h/index.h.jsonic`)
 }
 
 func TestCustomProcessor(t *testing.T) {

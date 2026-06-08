@@ -227,13 +227,29 @@ func buildPotentials(fullpath string, implicitExt []string) []string {
 		return nil
 	}
 	potentials := []string{fullpath}
-	ext := path.Ext(fullpath)
-	if ext == "" {
+
+	// Determine the final path segment in a separator-agnostic way: the
+	// in-memory resolver keys on forward slashes, while the file/pkg resolvers
+	// pass OS-native paths (e.g. Windows backslashes from filepath.Abs).
+	base := fullpath
+	if i := strings.LastIndexAny(fullpath, `/\`); i >= 0 {
+		base = fullpath[i+1:]
+	}
+
+	if path.Ext(base) == "" {
+		// Implicit extensions.
 		for _, ie := range implicitExt {
 			potentials = append(potentials, fullpath+ie)
 		}
+		// Folder index file.
 		for _, ie := range implicitExt {
 			potentials = append(potentials, fullpath+"/index"+ie)
+		}
+		// Folder index file including the folder name, e.g. foo/index.foo.jsonic.
+		if base != "" && base != "." {
+			for _, ie := range implicitExt {
+				potentials = append(potentials, fullpath+"/index."+base+ie)
+			}
 		}
 	}
 	return potentials
