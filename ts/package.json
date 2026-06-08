@@ -45,14 +45,14 @@
     "./processor/jsonic": "./dist/processor/jsonic.js"
   },
   "devDependencies": {
-    "@types/node": "^25.6.0",
+    "@types/node": "^25.9.2",
     "jsonic-multisource-pkg-test": "0.0.1",
     "memfs": "4.57.6",
     "typescript": "6.0.3"
   },
   "peerDependencies": {
     "@jsonic/directive": ">=2",
-    "@jsonic/path": ">=1",
+    "@jsonic/path": ">=2",
     "jsonic": ">=2"
   }
 }
