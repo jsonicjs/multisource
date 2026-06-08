@@ -18,9 +18,7 @@ single [Jsonic](https://jsonic.senecajs.org) parse result.
 
 ## Documentation
 
-Documentation for both language implementations follows the
-[Diátaxis](https://diataxis.fr) framework (Tutorials, How-to guides,
-Explanation, Reference).
+Documentation is available for both language implementations:
 
 - TypeScript: [`doc/multisource-ts.md`](doc/multisource-ts.md)
 - Go: [`doc/multisource-go.md`](doc/multisource-go.md)
