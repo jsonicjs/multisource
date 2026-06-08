@@ -230,6 +230,7 @@ func TestBuildPotentials(t *testing.T) {
 	assert(t, "pot-2", p[2], "foo.jsc")
 	assert(t, "pot-3", p[3], "foo.json")
 	assert(t, "pot-idx-1", p[4], "foo/index.jsonic")
+	assert(t, "pot-idx-folder", p[7], "foo/index.foo.jsonic")
 
 	p = buildPotentials("bar.json", exts)
 	assert(t, "has-ext", len(p), 1)

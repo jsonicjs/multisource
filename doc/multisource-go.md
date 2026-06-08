@@ -71,6 +71,48 @@ out, _ := j.Parse(`{x: @a}`)
 
 ## How-to guides
 
+### Load sources from the filesystem
+
+`MakeFileResolver` reads sources from disk, resolving the reference to an
+absolute path and trying implicit extensions and index files when the path
+has none:
+
+```go
+j := multisource.MakeJsonic(multisource.MultiSourceOptions{
+    Resolver: multisource.MakeFileResolver(),
+    Path:     "config", // base directory for relative references
+})
+out, _ := j.Parse(`{db: @"database.jsonic"}`)
+```
+
+Pass `FileResolverOptions` to supply a path transformer or preloaded
+contents (checked before touching disk):
+
+```go
+multisource.MakeFileResolver(multisource.FileResolverOptions{
+    PathFinder: func(spec string) string { return "conf/" + spec },
+    Preload:    map[string]string{"/abs/path/a.jsonic": "{a:1}"},
+})
+```
+
+### Resolve references from node_modules
+
+`MakePkgResolver` resolves references inside `node_modules` folders. With no
+options it walks up from the current working directory; pass `Paths` to set
+explicit search roots:
+
+```go
+j := multisource.MakeJsonic(multisource.MultiSourceOptions{
+    Resolver: multisource.MakePkgResolver(multisource.PkgResolverOptions{
+        Paths: []string{"/path/to/project"},
+    }),
+})
+out, _ := j.Parse(`{cfg: @"some-pkg/config.jsonic"}`)
+```
+
+A bare package reference (`@"some-pkg"`) resolves via the package's
+`package.json` `"main"`, falling back to index files.
+
 ### Supply a custom resolver
 
 Implement the `Resolver` function type. It must populate `Resolution.Found`
@@ -160,7 +202,7 @@ All added alternates share the `multisource` group tag, supplied via the
 ### `Version`
 
 ```go
-const Version = "0.1.0"
+const Version = "0.1.4"
 ```
 
 Go module release version.
@@ -196,10 +238,34 @@ Convenience wrapper around `MakeJsonic().Parse(src)`.
 
 | Name                   | Kind                  |
 | ---------------------- | --------------------- |
-| `MakeMemResolver`      | Resolver factory      |
+| `MakeMemResolver`      | Resolver factory (in-memory map) |
+| `MakeFileResolver`     | Resolver factory (filesystem)    |
+| `MakePkgResolver`      | Resolver factory (node_modules)  |
 | `DefaultProcessor`     | Raw passthrough       |
 | `JSONProcessor`        | `.json` via stdlib    |
 | `JsonicProcessor`      | `.jsonic`, `.jsc`     |
+
+These mirror the canonical TypeScript resolvers (`makeMemResolver`,
+`makeFileResolver`, `makePkgResolver`). `MakePkgResolver` implements the
+portable subset of the TypeScript package resolver: it walks `node_modules`
+directories, honours a package's `package.json` `"main"` for bare references,
+and tries implicit extensions and index files. It does not reproduce Node's
+full `require.resolve` algorithm (for example, conditional `"exports"`).
+
+```go
+// MakeFileResolver — load sources from disk.
+type FileResolverOptions struct {
+    PathFinder func(spec string) string // Transform the raw reference path.
+    Preload    map[string]string        // Full path -> content, checked first.
+}
+func MakeFileResolver(opts ...FileResolverOptions) Resolver
+
+// MakePkgResolver — resolve references inside node_modules.
+type PkgResolverOptions struct {
+    Paths []string // node_modules search roots; empty walks up from cwd.
+}
+func MakePkgResolver(opts ...PkgResolverOptions) Resolver
+```
 
 ### Types
 

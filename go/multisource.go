@@ -229,11 +229,19 @@ func buildPotentials(fullpath string, implicitExt []string) []string {
 	potentials := []string{fullpath}
 	ext := path.Ext(fullpath)
 	if ext == "" {
+		// Implicit extensions.
 		for _, ie := range implicitExt {
 			potentials = append(potentials, fullpath+ie)
 		}
+		// Folder index file.
 		for _, ie := range implicitExt {
 			potentials = append(potentials, fullpath+"/index"+ie)
+		}
+		// Folder index file including the folder name, e.g. foo/index.foo.jsonic.
+		if folder := path.Base(fullpath); folder != "" && folder != "." && folder != "/" {
+			for _, ie := range implicitExt {
+				potentials = append(potentials, fullpath+"/index."+folder+ie)
+			}
 		}
 	}
 	return potentials
