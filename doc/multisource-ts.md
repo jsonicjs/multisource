@@ -174,6 +174,10 @@ enclosing source's directory as the base. So with `main.jsonic` containing
 `grand:@"./grand.jsonic"`, the `./grand.jsonic` reference resolves to
 `sub/grand.jsonic` (relative to `child.jsonic`), at any nesting depth.
 
+This holds for every resolver: a relative reference inside a source loaded by
+`makePkgResolver` resolves against that source's directory too, rather than
+being treated as a `node_modules` package name.
+
 ### Directive-level grammar
 
 multisource registers three grammar tweaks under the `multisource` group

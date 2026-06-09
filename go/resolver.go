@@ -114,6 +114,27 @@ func MakePkgResolver(opts ...PkgResolverOptions) Resolver {
 
 		v := resolveVFS(mopts, ctx)
 
+		// A relative reference (./x, ../x) found inside a source loaded from a
+		// package is not a package name: resolve it against the containing
+		// source's directory via spec.Full, exactly as the file resolver does.
+		// Mirrors the TypeScript pkg resolver, whose fallback search resolves
+		// ps.full (base + path) rather than treating it as a bare package.
+		if isRelativeRef(ref) && spec.Full != "" {
+			full := v.canon(spec.Full)
+			potentials := buildPotentials(full, mopts.ImplicitExt)
+			res.Search = potentials
+			for _, p := range potentials {
+				if src, ok := v.readFile(p); ok {
+					res.Full = p
+					res.Kind = extKind(p)
+					res.Src = src
+					res.Found = true
+					return res
+				}
+			}
+			return res
+		}
+
 		var roots []string
 		if len(o.Paths) > 0 {
 			roots = o.Paths
@@ -150,6 +171,15 @@ func MakePkgResolver(opts ...PkgResolverOptions) Resolver {
 		res.Search = search
 		return res
 	}
+}
+
+// isRelativeRef reports whether ref is an explicit relative reference (./x or
+// ../x). Such a reference is resolved against the containing source's directory
+// (via spec.Full) rather than treated as a node_modules package name.
+func isRelativeRef(ref string) bool {
+	return ref == "." || ref == ".." ||
+		strings.HasPrefix(ref, "./") || strings.HasPrefix(ref, "../") ||
+		strings.HasPrefix(ref, `.\`) || strings.HasPrefix(ref, `..\`)
 }
 
 // resolveInPkgDir resolves a package reference inside a node_modules directory,

@@ -113,6 +113,10 @@ out, _ := j.Parse(`{cfg: @"some-pkg/config.jsonic"}`)
 A bare package reference (`@"some-pkg"`) resolves via the package's
 `package.json` `"main"`, falling back to index files.
 
+A relative reference (`@"./x"`, `@"../x"`) found *inside* a source loaded from a
+package resolves against that source's own directory — not as a package name —
+so a package can pull in its own sibling files.
+
 ### Supply a custom resolver
 
 Implement the `Resolver` function type. It must populate `Resolution.Found`
@@ -244,6 +248,10 @@ For example, with `main.jsonic` containing `child:@"./sub/child.jsonic"` and
 `sub/child.jsonic` containing `grand:@"./grand.jsonic"`, the `./grand.jsonic`
 reference resolves to `sub/grand.jsonic` (relative to `child.jsonic`), not to a
 top-level `grand.jsonic`.
+
+This holds for every resolver: a relative reference inside a source loaded by
+`MakePkgResolver` resolves against that source's directory too, rather than
+being treated as a `node_modules` package name.
 
 
 ## Reference

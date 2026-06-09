@@ -392,6 +392,19 @@ const path_1 = require("@jsonic/path");
         // then node_modules walk (no virtual fs) finds the package
         node_assert_1.default.deepEqual(j1('z:@"jsonic-multisource-pkg-test/zed.jsonic"', { multisource: { path: process.cwd() } }), { z: { zed: 99 } });
     });
+    (0, node_test_1.test)('pkg-relative-ref', () => {
+        const Path = require('node:path');
+        const j1 = jsonic_1.Jsonic.make().use(multisource_1.MultiSource, {
+            resolver: (0, pkg_1.makePkgResolver)({ require })
+        });
+        // A relative reference (./x) is resolved against the containing source's
+        // directory, not treated as a node_modules package name. The reference
+        // inside the loaded file (rel/outer.jsonic -> ./inner.jsonic) likewise
+        // resolves against that file's own directory. The base is seeded via a real
+        // anchor file so resolvefolder() yields the test directory.
+        const anchor = Path.resolve(__dirname, '../test/t01.jsonic');
+        node_assert_1.default.deepEqual(j1('@"./rel/outer.jsonic"', { multisource: { path: anchor } }), { o: 1, inner: { v: 7 } });
+    });
     (0, node_test_1.test)('file-implicit', () => {
         let j0 = jsonic_1.Jsonic.make().use(multisource_1.MultiSource, {
             resolver: (0, file_1.makeFileResolver)(),

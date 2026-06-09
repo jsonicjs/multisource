@@ -125,3 +125,33 @@ func TestPkgResolverFSWalkUp(t *testing.T) {
 	m, _ := r.(map[string]any)
 	assert(t, "pkg-fs-walkup", m["c"], map[string]any{"zed": float64(99)})
 }
+
+// TestPkgResolverRelativeInPkg checks that a relative reference (./x, ../x)
+// found *inside* a source loaded from a package resolves against that source's
+// own directory rather than being treated as a node_modules package name.
+// Covers an explicit extension, an implicit extension, and a sub-directory.
+func TestPkgResolverRelativeInPkg(t *testing.T) {
+	fsys := mapFS(map[string]string{
+		"node_modules/relpkg/index.jsonic":    `{a:1, b:@"./child.jsonic", c:@"./leaf", d:@"./sub/deep.jsonic"}`,
+		"node_modules/relpkg/child.jsonic":    `{x:10}`,
+		"node_modules/relpkg/leaf.jsonic":     `{y:20}`,
+		"node_modules/relpkg/sub/deep.jsonic": `{z:30}`,
+	})
+
+	j := MakeJsonic(MultiSourceOptions{
+		Resolver: MakePkgResolver(PkgResolverOptions{Paths: []string{"."}}),
+		FS:       fsys,
+	})
+
+	r, err := j.Parse(`{r:@"relpkg"}`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	m, _ := r.(map[string]any)
+	assert(t, "pkg-relative-internal", m["r"], map[string]any{
+		"a": float64(1),
+		"b": map[string]any{"x": float64(10)},
+		"c": map[string]any{"y": float64(20)},
+		"d": map[string]any{"z": float64(30)},
+	})
+}
