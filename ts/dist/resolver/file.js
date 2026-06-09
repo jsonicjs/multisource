@@ -52,11 +52,21 @@ function makeFileResolver(pathfinderOrOpts) {
     return function FileResolver(spec, popts, _rule, ctx) {
         const fs = ctx.meta?.fs || SystemFs;
         const foundSpec = pathfinder ? pathfinder(spec) : spec;
-        const ps = (0, multisource_1.resolvePathSpec)(popts, ctx, foundSpec, resolvefolder);
+        // An injected fs (ctx.meta.fs, e.g. memfs) is keyed by POSIX absolute
+        // paths. Use POSIX path semantics for it so Windows' win32 rules don't
+        // mangle paths (e.g. turning `//./main.jsonic` into the device path
+        // `\\.\main.jsonic`). The real filesystem keeps native semantics.
+        //
+        // NOTE: decide from whether an fs was explicitly injected, not from
+        // object identity of the fs. resolvePathSpec lives in another module with
+        // its own `import * as Fs` binding, so the fs it forwards to resolvefolder
+        // is never `=== SystemFs` even on the real filesystem.
+        const P = null != ctx.meta?.fs ? Path.posix : Path;
+        const ps = (0, multisource_1.resolvePathSpec)(popts, ctx, foundSpec, makeResolveFolder(P));
         let src = undefined;
         let search = [];
         if (null != ps.full) {
-            ps.full = Path.resolve(ps.full);
+            ps.full = P.resolve(ps.full);
             search.push(ps.full);
             // Check preloaded files first, then fall back to disk.
             src = preload?.[ps.full] ?? load(ps.full, fs);
@@ -67,15 +77,15 @@ function makeFileResolver(pathfinderOrOpts) {
                     let base = ps.base;
                     let last;
                     for (let i = 0; i < 7; i++) { // Heuristically check 7 levels of folders
-                        potentials.push(Path.resolve(base, 'node_modules', ps.path));
-                        base = Path.dirname(base);
+                        potentials.push(P.resolve(base, 'node_modules', ps.path));
+                        base = P.dirname(base);
                         if (last === base)
                             break;
                         last = base;
                     }
                 }
                 if (multisource_1.NONE === ps.kind) {
-                    potentials.push(...(0, mem_1.buildPotentials)(ps, popts, (...s) => Path.resolve(s.reduce((a, p) => Path.join(a, p)))));
+                    potentials.push(...(0, mem_1.buildPotentials)(ps, popts, (...s) => P.resolve(s.reduce((a, p) => P.join(a, p)))));
                 }
                 search.push(...potentials);
                 for (let path of potentials) {
@@ -97,17 +107,21 @@ function makeFileResolver(pathfinderOrOpts) {
         return res;
     };
 }
-function resolvefolder(path, fs) {
-    if ('string' !== typeof path) {
-        return path;
-    }
-    let folder = path;
-    let pathstats = fs.statSync(path);
-    if (pathstats.isFile()) {
-        let pathdesc = Path.parse(path);
-        folder = pathdesc.dir;
-    }
-    return folder;
+// Build a resolvefolder bound to a path module (POSIX for an injected fs,
+// native for the real filesystem). See note in FileResolver.
+function makeResolveFolder(P) {
+    return function resolvefolder(path, fs) {
+        if ('string' !== typeof path) {
+            return path;
+        }
+        let folder = path;
+        let pathstats = fs.statSync(path);
+        if (pathstats.isFile()) {
+            let pathdesc = P.parse(path);
+            folder = pathdesc.dir;
+        }
+        return folder;
+    };
 }
 function load(path, fs) {
     try {
