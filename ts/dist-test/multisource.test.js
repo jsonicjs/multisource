@@ -560,5 +560,38 @@ const path_1 = require("@jsonic/path");
         });
         node_assert_1.default.deepEqual(filemap, {});
     });
+    (0, node_test_1.test)('nested-relative-dirs', () => {
+        // A relative reference *inside* a loaded file resolves against that file's
+        // own directory (main -> sub/child -> sub/grand), across directories.
+        const { fs } = (0, memfs_1.memfs)({
+            'main.jsonic': '{top:1, child:@"./sub/child.jsonic"}',
+            sub: {
+                'child.jsonic': '{mid:2, grand:@"./grand.jsonic"}',
+                'grand.jsonic': '{v:99}',
+            },
+        });
+        const j = jsonic_1.Jsonic.make().use(multisource_1.MultiSource, { resolver: (0, file_1.makeFileResolver)() });
+        node_assert_1.default.deepEqual(j('@"./main.jsonic"', { fs, multisource: { path: '/' } }), { top: 1, child: { mid: 2, grand: { v: 99 } } });
+    });
+    (0, node_test_1.test)('nested-relative-sibling-dirs', () => {
+        // Two references loaded from the same parent each resolve their own
+        // relative reference against their own directory. Both children load
+        // "./inner.jsonic" but from different directories, so they pick up
+        // different files — proving the base is tracked per-source and a sibling
+        // load is unaffected.
+        const { fs } = (0, memfs_1.memfs)({
+            'main.jsonic': '{a:@"./aa/a.jsonic", b:@"./bb/b.jsonic"}',
+            aa: {
+                'a.jsonic': '{x:@"./inner.jsonic"}',
+                'inner.jsonic': '{n:11}',
+            },
+            bb: {
+                'b.jsonic': '{y:@"./inner.jsonic"}',
+                'inner.jsonic': '{n:22}',
+            },
+        });
+        const j = jsonic_1.Jsonic.make().use(multisource_1.MultiSource, { resolver: (0, file_1.makeFileResolver)() });
+        node_assert_1.default.deepEqual(j('@"./main.jsonic"', { fs, multisource: { path: '/' } }), { a: { x: { n: 11 } }, b: { y: { n: 22 } } });
+    });
 });
 //# sourceMappingURL=multisource.test.js.map

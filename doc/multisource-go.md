@@ -139,7 +139,7 @@ Processors fill in `res.Val` from `res.Src`. Register them under the kind
 j := multisource.MakeJsonic(multisource.MultiSourceOptions{
     Resolver: multisource.MakeMemResolver(files),
     Processor: map[string]multisource.Processor{
-        "yaml": func(res *multisource.Resolution, _ *multisource.MultiSourceOptions, _ *jsonic.Jsonic) {
+        "yaml": func(res *multisource.Resolution, _ *multisource.MultiSourceOptions, _ *jsonic.Context, _ *jsonic.Jsonic) {
             res.Val = parseYAML(res.Src)
         },
     },
@@ -186,15 +186,36 @@ All added alternates share the `multisource` group tag, supplied via the
 
 1. The directive action reads the reference — a string, or a map with a
    `path` key.
-2. `ResolvePathSpec` normalises the string into a `PathSpec` (kind, base,
+2. The base directory is chosen: `opts.Path` for a top-level parse, or the
+   directory of the enclosing source for a nested reference (see below).
+3. `ResolvePathSpec` normalises the string into a `PathSpec` (kind, base,
    full, abs).
-3. The configured `Resolver` attempts to load the source, optionally
+4. The configured `Resolver` attempts to load the source, optionally
    trying implicit extensions and `index.<ext>` variants.
-4. A `Processor` is selected from `Processor[kind]` (or the default
+5. A `Processor` is selected from `Processor[kind]` (or the default
    processor for unknown kinds) and converts the source string to a
    Go value.
-5. The value is spliced into the surrounding parse tree; at pair level,
+6. The value is spliced into the surrounding parse tree; at pair level,
    a map value is merged into the parent.
+
+### Nested relative references
+
+When a loaded source itself contains references, each relative reference
+resolves against the directory of the source that contains it — not against the
+top-level `opts.Path`. This mirrors the canonical TypeScript plugin.
+
+The mechanism: before processing a loaded source, the plugin records that
+source's full path in `ctx.Meta["multisource"]["path"]` (and pushes the
+previous path onto `ctx.Meta["multisource"]["parents"]`). `JsonicProcessor`
+threads this meta into the nested parse via `ParseMeta`, so when the nested
+parse encounters a reference, the base directory is taken from the enclosing
+source's path. The parent parse context is copied rather than mutated, so this
+works at any nesting depth and sibling loads remain independent.
+
+For example, with `main.jsonic` containing `child:@"./sub/child.jsonic"` and
+`sub/child.jsonic` containing `grand:@"./grand.jsonic"`, the `./grand.jsonic`
+reference resolves to `sub/grand.jsonic` (relative to `child.jsonic`), not to a
+top-level `grand.jsonic`.
 
 
 ## Reference
@@ -288,5 +309,12 @@ type Resolution struct {
 
 type Resolver func(spec PathSpec, opts *MultiSourceOptions) Resolution
 
-type Processor func(res *Resolution, opts *MultiSourceOptions, j *jsonic.Jsonic)
+type Processor func(res *Resolution, opts *MultiSourceOptions, ctx *jsonic.Context, j *jsonic.Jsonic)
 ```
+
+`ctx.Meta` carries the parse metadata for the current load, including a
+`"multisource"` entry whose `"path"` is the full path of the source being
+processed and whose `"parents"` is the chain of enclosing source paths. A
+processor that re-parses source (as `JsonicProcessor` does, via `ParseMeta`)
+must thread `ctx.Meta` through so that relative references inside the source
+resolve against the source's own directory.

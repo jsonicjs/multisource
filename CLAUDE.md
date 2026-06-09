@@ -87,10 +87,14 @@ The ports are not line-for-line identical. Current intentional/known gaps:
   (used by tests via `memfs`); the Go resolvers use the OS filesystem
   directly.
 - **No `.js` processor in Go.** Executing JavaScript modules is Node-specific.
-- **Base-path resolution.** The Go plugin resolves a reference against
-  `opts.Path` once, before calling the resolver; it does not yet track each
-  parent file's directory for relative nested includes the way the TS
-  `resolvePathSpec` does via `ctx.meta.multisource.path`.
+
+Nested relative includes have parity: like TS, the Go plugin threads each
+loaded source's full path through `ctx.Meta["multisource"]["path"]`, so a
+relative reference inside a loaded source resolves against *that* source's own
+directory (a → b → c, at any depth), and sibling loads are independent. The
+base path for a top-level parse is still `opts.Path` (Go's equivalent of
+seeding `ctx.meta.multisource.path` in TS); from there each nested source's
+directory is tracked automatically.
 
 If you close any of these gaps, update this list and both `doc/` files.
 

@@ -44,18 +44,25 @@ type Resolution struct {
 type Resolver func(spec PathSpec, opts *MultiSourceOptions) Resolution
 
 // Processor converts resolved source content into a value.
-type Processor func(res *Resolution, opts *MultiSourceOptions, j *jsonic.Jsonic)
+//
+// The ctx carries the parse metadata for this load (ctx.Meta), including the
+// multisource entry whose "path" is the full path of the source being
+// processed. Processors that re-parse source (see JsonicProcessor) must thread
+// ctx.Meta through so that nested relative references resolve against this
+// source's own directory. This mirrors the TypeScript Processor, which
+// receives the parse Context.
+type Processor func(res *Resolution, opts *MultiSourceOptions, ctx *jsonic.Context, j *jsonic.Jsonic)
 
 // NONE represents an unknown or missing extension.
 const NONE = ""
 
 // DefaultProcessor returns the raw source string as the value.
-func DefaultProcessor(res *Resolution, opts *MultiSourceOptions, j *jsonic.Jsonic) {
+func DefaultProcessor(res *Resolution, opts *MultiSourceOptions, ctx *jsonic.Context, j *jsonic.Jsonic) {
 	res.Val = res.Src
 }
 
 // JSONProcessor parses JSON source content.
-func JSONProcessor(res *Resolution, opts *MultiSourceOptions, j *jsonic.Jsonic) {
+func JSONProcessor(res *Resolution, opts *MultiSourceOptions, ctx *jsonic.Context, j *jsonic.Jsonic) {
 	if res.Src == "" {
 		res.Val = nil
 		return
@@ -69,12 +76,22 @@ func JSONProcessor(res *Resolution, opts *MultiSourceOptions, j *jsonic.Jsonic) 
 }
 
 // JsonicProcessor parses source content using jsonic.
-func JsonicProcessor(res *Resolution, opts *MultiSourceOptions, j *jsonic.Jsonic) {
+//
+// It threads ctx.Meta (which records this source's full path under the
+// multisource entry) into the nested parse via ParseMeta, so that relative
+// references inside res.Src resolve against this source's own directory rather
+// than the top-level base path. Mirrors the canonical TypeScript jsonic
+// processor, which calls jsonic(res.src, ctx.meta).
+func JsonicProcessor(res *Resolution, opts *MultiSourceOptions, ctx *jsonic.Context, j *jsonic.Jsonic) {
 	if res.Src == "" {
 		res.Val = nil
 		return
 	}
-	val, err := j.Parse(res.Src)
+	var meta map[string]any
+	if ctx != nil {
+		meta = ctx.Meta
+	}
+	val, err := j.ParseMeta(res.Src, meta)
 	if err != nil {
 		res.Val = res.Src
 		return

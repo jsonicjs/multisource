@@ -161,6 +161,19 @@ When a reference has no explicit extension, the resolver walks the
 `path/index + ext`. The first existing source wins; the detected kind
 determines which processor is used.
 
+### Nested relative references
+
+When a loaded source itself contains references, each relative reference
+resolves against the directory of the source that contains it — not against the
+top-level `path` option. The plugin records each loaded source's full path in
+`ctx.meta.multisource.path` (and the chain of enclosing paths in
+`ctx.meta.multisource.parents`); the jsonic processor threads this meta into
+the nested parse (`jsonic(res.src, ctx.meta)`), and `resolvePathSpec` uses the
+enclosing source's directory as the base. So with `main.jsonic` containing
+`child:@"./sub/child.jsonic"` and `sub/child.jsonic` containing
+`grand:@"./grand.jsonic"`, the `./grand.jsonic` reference resolves to
+`sub/grand.jsonic` (relative to `child.jsonic`), at any nesting depth.
+
 ### Directive-level grammar
 
 multisource registers three grammar tweaks under the `multisource` group
