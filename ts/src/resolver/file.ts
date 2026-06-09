@@ -38,13 +38,19 @@ export function makeFileResolver(
     const fs = ctx.meta?.fs || SystemFs
     const foundSpec = pathfinder ? pathfinder(spec) : spec
 
+    // An injected fs (ctx.meta.fs, e.g. memfs) is keyed by POSIX absolute
+    // paths. Use POSIX path semantics for it so Windows' win32 rules don't
+    // mangle paths (e.g. turning `//./main.jsonic` into the device path
+    // `\\.\main.jsonic`). The real filesystem keeps native semantics.
+    const P = fs === SystemFs ? Path : Path.posix
+
     const ps = resolvePathSpec(popts, ctx, foundSpec, resolvefolder)
     let src = undefined
 
     let search: string[] = []
 
     if (null != ps.full) {
-      ps.full = Path.resolve(ps.full)
+      ps.full = P.resolve(ps.full)
 
       search.push(ps.full)
 
@@ -59,8 +65,8 @@ export function makeFileResolver(
           let base = ps.base
           let last
           for (let i = 0; i < 7; i++) { // Heuristically check 7 levels of folders
-            potentials.push(Path.resolve(base, 'node_modules', ps.path))
-            base = Path.dirname(base)
+            potentials.push(P.resolve(base, 'node_modules', ps.path))
+            base = P.dirname(base)
             if (last === base) break
             last = base
           }
@@ -69,7 +75,7 @@ export function makeFileResolver(
         if (NONE === ps.kind) {
           potentials.push(...
             buildPotentials(ps, popts, (...s) =>
-              Path.resolve(s.reduce((a, p) => Path.join(a, p)))))
+              P.resolve(s.reduce((a, p) => P.join(a, p)))))
         }
 
         search.push(...potentials)
@@ -101,11 +107,15 @@ function resolvefolder(path: string, fs: FST) {
     return path
   }
 
+  // Match the path semantics to the fs: POSIX for an injected fs (memfs),
+  // native for the real filesystem. See note in FileResolver.
+  const P = fs === SystemFs ? Path : Path.posix
+
   let folder = path
   let pathstats = fs.statSync(path)
 
   if (pathstats.isFile()) {
-    let pathdesc = Path.parse(path)
+    let pathdesc = P.parse(path)
     folder = pathdesc.dir
   }
 
