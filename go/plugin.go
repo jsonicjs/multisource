@@ -149,7 +149,7 @@ func resolveSource(pathStr string, opts *MultiSourceOptions, ctx *jsonic.Context
 	}
 
 	spec := ResolvePathSpec(pathStr, base)
-	res := opts.Resolver(spec, opts)
+	res := opts.Resolver(spec, opts, ctx)
 
 	if !res.Found {
 		return nil

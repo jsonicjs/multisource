@@ -83,9 +83,14 @@ The ports are not line-for-line identical. Current intentional/known gaps:
   `"main"` for bare references, and tries implicit extensions / index files.
   It does not implement Node's full module-resolution algorithm (e.g.
   conditional `"exports"`).
-- **No virtual filesystem in Go.** The TS resolvers accept a `ctx.meta.fs`
-  (used by tests via `memfs`); the Go resolvers use the OS filesystem
-  directly.
+- **Virtual filesystem injection differs in shape.** Both ports let the
+  file/pkg resolvers read from an injected filesystem instead of the OS (the
+  default in both). TS uses `ctx.meta.fs` — a `node:fs` subset (e.g. `memfs`)
+  keyed by absolute paths. Go uses `MultiSourceOptions.FS` or `ctx.Meta["fs"]`
+  — an `io/fs.FS` (e.g. `testing/fstest.MapFS`) keyed by relative,
+  slash-separated paths (`fs.ValidPath`). Because an `io/fs.FS` is rooted and
+  relative, a Go reference under an injected FS resolves relative to the FS
+  root, not as an absolute path.
 - **No `.js` processor in Go.** Executing JavaScript modules is Node-specific.
 
 Nested relative includes have parity: like TS, the Go plugin threads each

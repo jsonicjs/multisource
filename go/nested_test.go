@@ -11,29 +11,18 @@ import (
 	jsonic "github.com/jsonicjs/jsonic/go"
 )
 
-// writeNested writes content to p, creating parent directories.
-func writeNested(t *testing.T, p, content string) {
-	t.Helper()
-	if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.WriteFile(p, []byte(content), 0o644); err != nil {
-		t.Fatal(err)
-	}
-}
-
 // TestNestedRelativeLoad checks that a relative reference *inside* a loaded
 // file resolves against that file's own directory (a -> b -> c, across
-// directories), mirroring the canonical TypeScript behaviour.
+// directories), mirroring the canonical TypeScript behaviour. Uses an in-memory
+// fs.FS so the test is hermetic (cf. the memfs-based TS test).
 func TestNestedRelativeLoad(t *testing.T) {
-	dir := t.TempDir()
-	sub := filepath.Join(dir, "sub")
+	fsys := mapFS(map[string]string{
+		"main.jsonic":      `{top:1, child:@"./sub/child.jsonic"}`,
+		"sub/child.jsonic": `{mid:2, grand:@"./grand.jsonic"}`,
+		"sub/grand.jsonic": `{v:99}`,
+	})
 
-	writeNested(t, filepath.Join(dir, "main.jsonic"), `{top:1, child:@"./sub/child.jsonic"}`)
-	writeNested(t, filepath.Join(sub, "child.jsonic"), `{mid:2, grand:@"./grand.jsonic"}`)
-	writeNested(t, filepath.Join(sub, "grand.jsonic"), `{v:99}`)
-
-	j := MakeJsonic(MultiSourceOptions{Resolver: MakeFileResolver(), Path: dir})
+	j := MakeJsonic(MultiSourceOptions{Resolver: MakeFileResolver(), FS: fsys})
 	r, err := j.Parse(`@"./main.jsonic"`)
 	if err != nil {
 		t.Fatal(err)
@@ -56,15 +45,15 @@ func TestNestedRelativeLoad(t *testing.T) {
 // is tracked per-source and that resolving one reference does not leak into a
 // sibling (the parent context is copied, not mutated).
 func TestNestedRelativeSiblingDirs(t *testing.T) {
-	dir := t.TempDir()
+	fsys := mapFS(map[string]string{
+		"main.jsonic":     `{a:@"./aa/a.jsonic", b:@"./bb/b.jsonic"}`,
+		"aa/a.jsonic":     `{x:@"./inner.jsonic"}`,
+		"aa/inner.jsonic": `{n:11}`,
+		"bb/b.jsonic":     `{y:@"./inner.jsonic"}`,
+		"bb/inner.jsonic": `{n:22}`,
+	})
 
-	writeNested(t, filepath.Join(dir, "main.jsonic"), `{a:@"./aa/a.jsonic", b:@"./bb/b.jsonic"}`)
-	writeNested(t, filepath.Join(dir, "aa", "a.jsonic"), `{x:@"./inner.jsonic"}`)
-	writeNested(t, filepath.Join(dir, "aa", "inner.jsonic"), `{n:11}`)
-	writeNested(t, filepath.Join(dir, "bb", "b.jsonic"), `{y:@"./inner.jsonic"}`)
-	writeNested(t, filepath.Join(dir, "bb", "inner.jsonic"), `{n:22}`)
-
-	j := MakeJsonic(MultiSourceOptions{Resolver: MakeFileResolver(), Path: dir})
+	j := MakeJsonic(MultiSourceOptions{Resolver: MakeFileResolver(), FS: fsys})
 	r, err := j.Parse(`@"./main.jsonic"`)
 	if err != nil {
 		t.Fatal(err)
@@ -108,10 +97,10 @@ func TestNestedRelativeMemFlat(t *testing.T) {
 // ctx.meta.multisource.{path,parents}. A custom processor inspects the meta it
 // receives.
 func TestNestedSourcePathMeta(t *testing.T) {
-	dir := t.TempDir()
-
-	writeNested(t, filepath.Join(dir, "main.jsonic"), `{child:@"./sub/c.probe"}`)
-	writeNested(t, filepath.Join(dir, "sub", "c.probe"), `probe-content`)
+	fsys := mapFS(map[string]string{
+		"main.jsonic": `{child:@"./sub/c.probe"}`,
+		"sub/c.probe": `probe-content`,
+	})
 
 	var gotPath string
 	var gotParents []string
@@ -125,7 +114,7 @@ func TestNestedSourcePathMeta(t *testing.T) {
 
 	j := MakeJsonic(MultiSourceOptions{
 		Resolver: MakeFileResolver(),
-		Path:     dir,
+		FS:       fsys,
 		Processor: map[string]Processor{
 			NONE:     DefaultProcessor,
 			"jsonic": JsonicProcessor,
@@ -142,4 +131,39 @@ func TestNestedSourcePathMeta(t *testing.T) {
 	if len(gotParents) != 1 || !strings.HasSuffix(filepath.ToSlash(gotParents[0]), "main.jsonic") {
 		t.Fatalf("threaded parents: want [.../main.jsonic], got %#v", gotParents)
 	}
+}
+
+// TestNestedRelativeLoadOSFiles is the on-disk counterpart of
+// TestNestedRelativeLoad: it exercises nested relative resolution against real
+// OS files (absolute paths from filepath.Abs), confirming the directory
+// tracking works for the default OS filesystem as well as an injected fs.FS.
+func TestNestedRelativeLoadOSFiles(t *testing.T) {
+	dir := t.TempDir()
+	sub := filepath.Join(dir, "sub")
+	if err := os.MkdirAll(sub, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	write := func(p, s string) {
+		if err := os.WriteFile(p, []byte(s), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	write(filepath.Join(dir, "main.jsonic"), `{top:1, child:@"./sub/child.jsonic"}`)
+	write(filepath.Join(sub, "child.jsonic"), `{mid:2, grand:@"./grand.jsonic"}`)
+	write(filepath.Join(sub, "grand.jsonic"), `{v:99}`)
+
+	j := MakeJsonic(MultiSourceOptions{Resolver: MakeFileResolver(), Path: dir})
+	r, err := j.Parse(`@"./main.jsonic"`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert(t, "nested-relative-os", r, map[string]any{
+		"top": float64(1),
+		"child": map[string]any{
+			"mid": float64(2),
+			"grand": map[string]any{
+				"v": float64(99),
+			},
+		},
+	})
 }

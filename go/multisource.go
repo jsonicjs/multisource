@@ -4,6 +4,7 @@ package multisource
 
 import (
 	"encoding/json"
+	"io/fs"
 	"path"
 	"strings"
 
@@ -20,6 +21,17 @@ type MultiSourceOptions struct {
 	MarkChar    string
 	Processor   map[string]Processor
 	ImplicitExt []string
+
+	// FS is an optional filesystem for the file and pkg resolvers to read
+	// from. When nil, the OS filesystem is used. Supplying an in-memory
+	// implementation (for example testing/fstest.MapFS) makes resolution
+	// hermetic. A per-parse override may also be passed as ctx.Meta["fs"],
+	// mirroring the TypeScript ctx.meta.fs injection point.
+	//
+	// Note: an io/fs.FS uses relative, slash-separated paths (see fs.ValidPath),
+	// so when FS is set the base Path and references resolve relative to the
+	// FS root rather than as absolute OS paths.
+	FS fs.FS
 }
 
 // PathSpec represents a normalized path to a source.
@@ -40,8 +52,11 @@ type Resolution struct {
 	Search []string // List of searched paths.
 }
 
-// Resolver finds source content for a given path spec.
-type Resolver func(spec PathSpec, opts *MultiSourceOptions) Resolution
+// Resolver finds source content for a given path spec. The ctx carries the
+// parse metadata (ctx.Meta); resolvers may read ctx.Meta["fs"] for a per-parse
+// filesystem override. Mirrors the TypeScript Resolver, which receives the
+// parse Context.
+type Resolver func(spec PathSpec, opts *MultiSourceOptions, ctx *jsonic.Context) Resolution
 
 // Processor converts resolved source content into a value.
 //
@@ -99,9 +114,10 @@ func JsonicProcessor(res *Resolution, opts *MultiSourceOptions, ctx *jsonic.Cont
 	res.Val = val
 }
 
-// MakeMemResolver creates a resolver that looks up paths in a map.
+// MakeMemResolver creates a resolver that looks up paths in a map. It reads
+// from its own in-memory map and ignores ctx / opts.FS.
 func MakeMemResolver(files map[string]string) Resolver {
-	return func(spec PathSpec, opts *MultiSourceOptions) Resolution {
+	return func(spec PathSpec, opts *MultiSourceOptions, ctx *jsonic.Context) Resolution {
 		res := Resolution{
 			PathSpec: spec,
 			Found:    false,

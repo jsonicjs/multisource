@@ -119,7 +119,7 @@ Implement the `Resolver` function type. It must populate `Resolution.Found`
 and — if found — `Src` and `Full`:
 
 ```go
-httpResolver := func(spec multisource.PathSpec, _ *multisource.MultiSourceOptions) multisource.Resolution {
+httpResolver := func(spec multisource.PathSpec, _ *multisource.MultiSourceOptions, _ *jsonic.Context) multisource.Resolution {
     body := httpGet(spec.Full)
     return multisource.Resolution{
         PathSpec: spec,
@@ -128,6 +128,34 @@ httpResolver := func(spec multisource.PathSpec, _ *multisource.MultiSourceOption
     }
 }
 j := multisource.MakeJsonic(multisource.MultiSourceOptions{Resolver: httpResolver})
+```
+
+### Resolve from an in-memory filesystem (hermetic tests)
+
+The file and pkg resolvers read from the OS by default. Supply an `io/fs.FS`
+(for example `testing/fstest.MapFS`) via `FS` to read from memory instead — handy
+for hermetic tests, mirroring the `ctx.meta.fs` injection used by the TypeScript
+tests. Paths under an injected FS are relative and slash-separated (see
+`fs.ValidPath`), so they resolve relative to the FS root:
+
+```go
+fsys := fstest.MapFS{
+    "main.jsonic":      &fstest.MapFile{Data: []byte(`{child:@"./sub/child.jsonic"}`)},
+    "sub/child.jsonic": &fstest.MapFile{Data: []byte(`{v:99}`)},
+}
+j := multisource.MakeJsonic(multisource.MultiSourceOptions{
+    Resolver: multisource.MakeFileResolver(),
+    FS:       fsys,
+})
+out, _ := j.Parse(`@"./main.jsonic"`)
+// out == map[string]any{"child": map[string]any{"v": float64(99)}}
+```
+
+A per-parse override can also be passed as `ctx.Meta["fs"]` via `ParseMeta`,
+matching the TypeScript `j('...', { fs })` form:
+
+```go
+out, _ := j.ParseMeta(`@"./main.jsonic"`, map[string]any{"fs": fsys})
 ```
 
 ### Register a processor for a new file kind
@@ -254,6 +282,7 @@ Convenience wrapper around `MakeJsonic().Parse(src)`.
 | `MarkChar`     | `string`                   | `"@"`                                          | Directive open character.       |
 | `Processor`    | `map[string]Processor`     | `json`, `jsonic`, `jsc`, default               | Per-kind source transformers.   |
 | `ImplicitExt`  | `[]string`                 | `[".jsonic", ".jsc", ".json"]`                 | Extensions tried when omitted.  |
+| `FS`           | `fs.FS`                    | `nil` (OS filesystem)                          | Filesystem for file/pkg resolvers. |
 
 ### Resolvers and processors
 
@@ -307,10 +336,14 @@ type Resolution struct {
     Search []string
 }
 
-type Resolver func(spec PathSpec, opts *MultiSourceOptions) Resolution
+type Resolver func(spec PathSpec, opts *MultiSourceOptions, ctx *jsonic.Context) Resolution
 
 type Processor func(res *Resolution, opts *MultiSourceOptions, ctx *jsonic.Context, j *jsonic.Jsonic)
 ```
+
+The `ctx` passed to a `Resolver` lets it read a per-parse filesystem from
+`ctx.Meta["fs"]` (an `io/fs.FS`); resolvers fall back to `opts.FS` and then the
+OS filesystem.
 
 `ctx.Meta` carries the parse metadata for the current load, including a
 `"multisource"` entry whose `"path"` is the full path of the source being
