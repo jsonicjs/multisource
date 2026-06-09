@@ -27,8 +27,11 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
     - run: npm i
+      working-directory: ts
     - run: npm run build --if-present
+      working-directory: ts
     - run: npm test
+      working-directory: ts
 
   build-go:
 
@@ -42,13 +45,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
+    - name: Use Go ${{ matrix.go-version }}
+      uses: actions/setup-go@v5
       with:
-        node-version: ${{ matrix.node-version }}
-    - run: npm i
-      working-directory: ts
-    - run: npm run build --if-present
-      working-directory: ts
-    - run: npm test
-      working-directory: ts
+        go-version: ${{ matrix.go-version }}
+    - run: go build ./...
+      working-directory: go
+    - run: go test ./...
+      working-directory: go
