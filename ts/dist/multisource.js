@@ -121,7 +121,21 @@ const MultiSource = (jsonic, popts) => {
                         src: fullpath,
                         wen: Date.now(),
                     };
-                    depmap[parent] = depmap[parent] || {};
+                    // `parent` is a SOURCE PATH, so it is only as trustworthy as the
+                    // tree being resolved. On an ordinary object `depmap['__proto__']`
+                    // answers with `Object.prototype` — truthy, so the `||` never fires
+                    // and the dependency is recorded onto the prototype of every object
+                    // in the process. `defineProperty` creates an own property instead
+                    // of invoking the `__proto__` setter, and the own-property read
+                    // stops an inherited name masquerading as an existing entry.
+                    if (!Object.prototype.hasOwnProperty.call(depmap, parent)) {
+                        Object.defineProperty(depmap, parent, {
+                            value: Object.create(null),
+                            writable: true,
+                            enumerable: true,
+                            configurable: true,
+                        });
+                    }
                     depmap[parent][fullpath] = dep;
                 }
             }
